@@ -983,10 +983,46 @@ class SubmissionHistoryView(APIView, ApiKeyPermissionMixIn):
     def get(self, request):
         """
         Get submission history details.
-        Regular users can only retrieve their own submission history and users with GlobalStaff status
-        can retrieve everyone's submission history.
+
+        **Usecases**:
+
+            Regular users can only retrieve their own submission history and users with GlobalStaff status
+            can retrieve everyone's submission history.
+
+        **Example Requests**:
+
+            GET /api/enrollment/v1/submission_history?course_id=course_id
+            GET /api/enrollment/v1/submission_history?course_id=course_id&user=username
+            GET /api/enrollment/v1/submission_history?course_id=course_id&all_users=true
+
+        **Query Parameters for GET**
+
+            * course_id: Course id to retrieve submission history.
+            * username: Single username for which this view will retrieve the submission history details.
+                If no username specified the requester's username will be used.
+            * all_users: If true and if the requester has the correct permissions,
+                retrieve history submission from every user in a course id.
+
+        **Response Values**:
+
+            If there's an error while getting the submission history an empty response will
+            be returned.
+            The submission history response has the following attributes:
+
+                * Results: A list of submission history:
+                    * course_id: Course id
+                    * course_name: Course name
+                    * user: Username
+                    * problems: List of problems
+                        * location: problem location
+                        * name: problem's display name
+                        * submission_history: List of submission history
+                            * state: State of submission.
+                            * grade: Grade.
+                            * max_grade: Maximum possible grade.
+                        * data: problem's data.
         """
-        username = request.GET.get('user', request.user.username)
+        username = request.GET.get('username', request.user.username)
         data = []
         if GlobalStaff().has_user(request.user):
             all_users = bool(request.GET.get('all', False))
@@ -1027,7 +1063,7 @@ class SubmissionHistoryView(APIView, ApiKeyPermissionMixIn):
             course_data = self._get_course_data(course_enrollment, course, course_children)
             data.append(course_data)
 
-        return Response(data)
+        return Response({'results': data})
 
     def _get_problem_data(self, course_enrollment, component):
         """

@@ -79,7 +79,7 @@ class CourseEnrollmentSerializer(serializers.ModelSerializer):
 
     """
     course_details = CourseSerializer(source="course_overview")
-    user = serializers.SerializerMethodField('get_username')
+    user = serializers.SerializerMethodField("get_username")
     finished = serializers.SerializerMethodField()
     grading = serializers.SerializerMethodField()
 
