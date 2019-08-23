@@ -45,6 +45,8 @@ from xmodule.fields import RelativeTime
 from xmodule.modulestore.exceptions import ItemNotFoundError
 from xmodule.util.xmodule_django import add_webpack_to_fragment
 
+from openedx.core.lib.api.utils import pluggable_override
+
 log = logging.getLogger(__name__)
 
 XMODULE_METRIC_NAME = 'edxapp.xmodule'
@@ -603,6 +605,14 @@ class XModuleMixin(XModuleFields, XBlock):
             if selector(child):
                 return child
         return None
+
+    @pluggable_override('GET_UNIT_ICON_IMPL')
+    def get_icon(self):
+        """
+        An API for returning a css class identifying this module in the context of an icon.
+        It can be overridden by setting `GET_UNIT_ICON_IMPL` to an alternative implementation.
+        """
+        return self.get_icon_class()
 
     def get_icon_class(self):
         """

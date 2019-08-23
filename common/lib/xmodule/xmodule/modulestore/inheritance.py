@@ -231,6 +231,13 @@ class InheritanceMixin(XBlockMixin):
         scope=Scope.settings
     )
 
+    icon = String(
+        display_name=_("Icon"),
+        default='default',
+        help=_("XBlock Icon"),
+        scope=Scope.settings,
+    )
+
     @property
     def close_date(self):
         """
