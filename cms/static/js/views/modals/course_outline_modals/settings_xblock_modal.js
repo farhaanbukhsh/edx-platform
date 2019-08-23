@@ -17,10 +17,11 @@ define(['jquery', 'underscore', 'gettext', 'edx-ui-toolkit/js/utils/string-utils
     },
 
     initializeEditors: function () {
+      var tabsTemplate;
       var tabs = this.options.tabs;
       if (tabs && tabs.length > 0) {
         if (tabs.length > 1) {
-          var tabsTemplate = this.loadTemplate('settings-modal-tabs');
+          tabsTemplate = this.loadTemplate('settings-modal-tabs');
           HtmlUtils.setHtml(this.$('.modal-section'), HtmlUtils.HTML(tabsTemplate({tabs: tabs})));
           _.each(this.options.tabs, function (tab) {
             this.options.editors.push.apply(

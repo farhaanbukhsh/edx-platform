@@ -58,8 +58,10 @@ define(['jquery', 'underscore',
     },
 
     save: function (event) {
+      var requestData;
+
       event.preventDefault();
-      var requestData = this.getRequestData();
+      requestData = this.getRequestData();
       if (!_.isEqual(requestData, {metadata: {}})) {
         XBlockViewUtils.updateXBlockFields(this.model, requestData, {
           success: this.options.onSave
