@@ -11,6 +11,7 @@ import six
 from lxml import etree
 from web_fragments.fragment import Fragment
 from xblock.core import XBlock
+from xblock.fields import String, Scope
 from xmodule.mako_module import MakoTemplateBlockBase
 from xmodule.progress import Progress
 from xmodule.seq_module import SequenceFields
@@ -18,6 +19,10 @@ from xmodule.studio_editable import StudioEditableBlock
 from xmodule.util.xmodule_django import add_webpack_to_fragment
 from xmodule.x_module import PUBLIC_VIEW, STUDENT_VIEW, XModuleFields
 from xmodule.xml_module import XmlParserMixin
+
+# Make '_' a no-op so we can scrape strings
+# Using lambda instead of `django.utils.translation.ugettext_noop` because Django cannot be imported in this file
+_ = lambda text: text
 
 log = logging.getLogger(__name__)
 
@@ -41,6 +46,13 @@ class VerticalBlock(SequenceFields, XModuleFields, StudioEditableBlock, XmlParse
     has_children = True
 
     show_in_read_only_mode = True
+
+    icon = String(
+        display_name=_("Icon"),
+        default='default',
+        help=_("XBlock Icon"),
+        scope=Scope.settings,
+    )
 
     def _student_or_public_view(self, context, view):
         """

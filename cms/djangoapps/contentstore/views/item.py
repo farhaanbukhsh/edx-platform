@@ -1199,7 +1199,6 @@ def create_xblock_info(xblock, data=None, metadata=None, include_ancestor_info=F
             'group_access': xblock.group_access,
             'user_partitions': user_partitions,
             'show_correctness': xblock.show_correctness,
-            'icon': xblock.icon,
         })
 
         if xblock.category == 'sequential':
@@ -1219,6 +1218,10 @@ def create_xblock_info(xblock, data=None, metadata=None, include_ancestor_info=F
                 'highlights_enabled': highlights_setting.is_enabled(),
                 'highlights_preview_only': not COURSE_UPDATE_WAFFLE_FLAG.is_enabled(course.id),
                 'highlights_doc_url': HelpUrlExpert.the_one().url_for_token('content_highlights'),
+            })
+        elif xblock.category == 'vertical':
+            xblock_info.update({
+                'icon': xblock.icon,
             })
 
         # update xblock_info with special exam information if the feature flag is enabled
