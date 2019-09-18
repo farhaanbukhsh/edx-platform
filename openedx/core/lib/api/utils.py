@@ -35,11 +35,11 @@ def pluggable_override(override):
     def decorator(f):
         @functools.wraps(f)
         def wrapper(*args, **kwargs):
-            prev_fn = f  # The base method in `edx-platform`.
+            prev_fn = functools.partial(f, *args, **kwargs)  # The base method in `edx-platform`.
 
             override_functions = getattr(settings, override, None)
             if not override_functions:  # Override not specified, call the original implementation.
-                return prev_fn(*args, **kwargs)
+                return prev_fn()
 
             if isinstance(override_functions, str):
                 override_functions = [override_functions]
