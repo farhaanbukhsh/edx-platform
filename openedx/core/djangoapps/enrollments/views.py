@@ -15,6 +15,8 @@ from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.utils.decorators import method_decorator
 from edx_rest_framework_extensions.auth.jwt.authentication import JwtAuthentication
 from edx_rest_framework_extensions.auth.session.authentication import SessionAuthenticationAllowInactiveUser
+from lms.djangoapps.courseware.courses import get_course
+from lms.djangoapps.courseware.models import StudentModule, BaseStudentModuleHistory
 from opaque_keys import InvalidKeyError
 from opaque_keys.edx.keys import CourseKey
 from openedx.core.djangoapps.cors_csrf.authentication import SessionAuthenticationCrossDomainCsrf
@@ -47,8 +49,6 @@ from rest_framework.generics import ListAPIView
 from rest_framework.response import Response
 from rest_framework.throttling import UserRateThrottle
 from rest_framework.views import APIView
-from courseware.courses import get_course
-from courseware.models import StudentModule, BaseStudentModuleHistory
 from student.auth import user_has_role
 from student.models import CourseEnrollment, User
 from student.roles import CourseStaffRole, GlobalStaff
