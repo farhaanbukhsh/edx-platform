@@ -1075,7 +1075,7 @@ class SubmissionHistoryView(APIView, ApiKeyPermissionMixIn):
         component: Component to analyze.
         """
         problem_data = {
-            'location': unicode(component.location),
+            'location': component.location,
             'name': component.display_name,
             'submission_history': [],
             'data': component.data
@@ -1117,7 +1117,7 @@ class SubmissionHistoryView(APIView, ApiKeyPermissionMixIn):
         """
 
         course_data = {
-            'course_id': unicode(course_enrollment.course_id),
+            'course_id': course_enrollment.course_id,
             'course_name': course.display_name_with_default,
             'user': course_enrollment.user.username,
             'problems': []
