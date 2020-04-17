@@ -118,7 +118,7 @@ def get_block_metadata(block, includes=()):
         data["student_view_data"] = block.student_view_data() if hasattr(block, 'student_view_data') else None
 
     if "children" in includes:
-        data["children"] = block.children  # List of usage keys of children
+        data["children"] = block.children if hasattr(block, 'children') else [] # List of usage keys of children
 
     if "editable_children" in includes:
         # "Editable children" means children in the same bundle, as opposed to linked children in other bundles.
