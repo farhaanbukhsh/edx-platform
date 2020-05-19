@@ -51,6 +51,7 @@ from openedx.core.djangolib.markup import HTML
 from openedx.features.course_duration_limits.models import CourseDurationLimitConfig
 from openedx.features.course_experience import (
     COURSE_ENABLE_UNENROLLED_ACCESS_FLAG,
+    RELATIVE_DATES_FLAG,
     SHOW_REVIEWS_TOOL_FLAG,
     SHOW_UPGRADE_MSG_ON_COURSE_HOME,
     UNIFIED_COURSE_TAB_FLAG
@@ -218,7 +219,7 @@ class TestCourseHomePage(CourseHomePageTestCase):
 
         # Fetch the view and verify the query counts
         # TODO: decrease query count as part of REVO-28
-        with self.assertNumQueries(74, table_blacklist=QUERY_COUNT_TABLE_BLACKLIST):
+        with self.assertNumQueries(75, table_blacklist=QUERY_COUNT_TABLE_BLACKLIST):
             with check_mongo_calls(4):
                 url = course_home_url(self.course)
                 self.client.get(url)
@@ -948,6 +949,7 @@ class CourseHomeFragmentViewTests(ModuleStoreTestCase):
         self.course = CourseFactory(
             start=now() - timedelta(days=30),
             end=end,
+            self_paced=True,
         )
         self.url = course_home_url(self.course)
 
@@ -1020,3 +1022,10 @@ class CourseHomeFragmentViewTests(ModuleStoreTestCase):
             response = self.client.get(self.url)
 
         self.assertContains(response, "<span>DISCOUNT_PRICE</span>")
+
+    @RELATIVE_DATES_FLAG.override(active=True)
+    def test_reset_deadline_banner_is_present_on_course_tab(self):
+        CourseEnrollment.enroll(self.user, self.course.id, CourseMode.VERIFIED)  # pylint: disable=no-member
+        response = self.client.get(self.url)
+
+        self.assertContains(response, '<div class="reset-deadlines-banner">')

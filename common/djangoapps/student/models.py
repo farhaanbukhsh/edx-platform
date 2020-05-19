@@ -13,6 +13,7 @@ file and check it in at the same time as your model changes. To do that,
 
 
 import hashlib
+import inspect
 import json
 import logging
 import uuid
@@ -23,7 +24,6 @@ from importlib import import_module
 
 import six
 from config_models.models import ConfigurationModel
-from course_modes.models import CourseMode, get_cosmetic_verified_display_price
 from django.apps import apps
 from django.conf import settings
 from django.contrib.auth.models import User
@@ -33,7 +33,7 @@ from django.core.cache import cache
 from django.core.exceptions import MultipleObjectsReturned, ObjectDoesNotExist
 from django.core.validators import FileExtensionValidator, RegexValidator
 from django.db import IntegrityError, models
-from django.db.models import Count, Q, Index
+from django.db.models import Count, Index, Q
 from django.db.models.signals import post_save, pre_save
 from django.db.utils import ProgrammingError
 from django.dispatch import receiver
@@ -54,14 +54,10 @@ from six import text_type
 from six.moves import range
 from six.moves.urllib.parse import urlencode
 from slumber.exceptions import HttpClientError, HttpServerError
-from student.signals import ENROLL_STATUS_CHANGE, ENROLLMENT_TRACK_UPDATED, UNENROLL_DONE
-from track import contexts, segment
 from user_util import user_util
-from util.milestones_helpers import is_entrance_exams_enabled
-from util.model_utils import emit_field_changed_events, get_changed_fields_dict
-from util.query import use_read_replica_if_available
 
 import openedx.core.djangoapps.django_comment_common.comment_client as cc
+from course_modes.models import CourseMode, get_cosmetic_verified_display_price
 from lms.djangoapps.certificates.models import GeneratedCertificate
 from lms.djangoapps.courseware.models import (
     CourseDynamicUpgradeDeadlineConfiguration,
@@ -78,6 +74,11 @@ from openedx.core.djangoapps.enrollments.api import (
 from openedx.core.djangoapps.site_configuration import helpers as configuration_helpers
 from openedx.core.djangoapps.xmodule_django.models import NoneToEmptyManager
 from openedx.core.djangolib.model_mixins import DeletableByUserValue
+from student.signals import ENROLL_STATUS_CHANGE, ENROLLMENT_TRACK_UPDATED, UNENROLL_DONE
+from track import contexts, segment
+from util.milestones_helpers import is_entrance_exams_enabled
+from util.model_utils import emit_field_changed_events, get_changed_fields_dict
+from util.query import use_read_replica_if_available
 
 log = logging.getLogger(__name__)
 AUDIT_LOG = logging.getLogger("audit")
@@ -499,6 +500,64 @@ class UserProfile(models.Model):
     mailing_address = models.TextField(blank=True, null=True)
     city = models.TextField(blank=True, null=True)
     country = CountryField(blank=True, null=True)
+    COUNTRY_WITH_STATES = u'US'
+    STATE_CHOICES = (
+        ('AL', 'Alabama'),
+        ('AK', 'Alaska'),
+        ('AZ', 'Arizona'),
+        ('AR', 'Arkansas'),
+        ('AA', 'Armed Forces Americas'),
+        ('AE', 'Armed Forces Europe'),
+        ('AP', 'Armed Forces Pacific'),
+        ('CA', 'California'),
+        ('CO', 'Colorado'),
+        ('CT', 'Connecticut'),
+        ('DE', 'Delaware'),
+        ('DC', 'District Of Columbia'),
+        ('FL', 'Florida'),
+        ('GA', 'Georgia'),
+        ('HI', 'Hawaii'),
+        ('ID', 'Idaho'),
+        ('IL', 'Illinois'),
+        ('IN', 'Indiana'),
+        ('IA', 'Iowa'),
+        ('KS', 'Kansas'),
+        ('KY', 'Kentucky'),
+        ('LA', 'Louisiana'),
+        ('ME', 'Maine'),
+        ('MD', 'Maryland'),
+        ('MA', 'Massachusetts'),
+        ('MI', 'Michigan'),
+        ('MN', 'Minnesota'),
+        ('MS', 'Mississippi'),
+        ('MO', 'Missouri'),
+        ('MT', 'Montana'),
+        ('NE', 'Nebraska'),
+        ('NV', 'Nevada'),
+        ('NH', 'New Hampshire'),
+        ('NJ', 'New Jersey'),
+        ('NM', 'New Mexico'),
+        ('NY', 'New York'),
+        ('NC', 'North Carolina'),
+        ('ND', 'North Dakota'),
+        ('OH', 'Ohio'),
+        ('OK', 'Oklahoma'),
+        ('OR', 'Oregon'),
+        ('PA', 'Pennsylvania'),
+        ('RI', 'Rhode Island'),
+        ('SC', 'South Carolina'),
+        ('SD', 'South Dakota'),
+        ('TN', 'Tennessee'),
+        ('TX', 'Texas'),
+        ('UT', 'Utah'),
+        ('VT', 'Vermont'),
+        ('VA', 'Virginia'),
+        ('WA', 'Washington'),
+        ('WV', 'West Virginia'),
+        ('WI', 'Wisconsin'),
+        ('WY', 'Wyoming'),
+    )
+    state = models.CharField(blank=True, null=True, max_length=2, choices=STATE_CHOICES)
     goals = models.TextField(blank=True, null=True)
     allow_certificate = models.BooleanField(default=1)
     bio = models.CharField(blank=True, null=True, max_length=3000, db_index=False)
@@ -534,7 +593,7 @@ class UserProfile(models.Model):
         if self.gender:
             return self.__enumerable_to_display(self.GENDER_CHOICES, self.gender)
 
-    def get_meta(self):  # pylint: disable=missing-docstring
+    def get_meta(self):  # pylint: disable=missing-function-docstring
         js_str = self.meta
         if not js_str:
             js_str = dict()
@@ -543,7 +602,7 @@ class UserProfile(models.Model):
 
         return js_str
 
-    def set_meta(self, meta_json):  # pylint: disable=missing-docstring
+    def set_meta(self, meta_json):
         self.meta = json.dumps(meta_json)
 
     def set_login_session(self, session_id=None):
@@ -624,7 +683,7 @@ class UserProfile(models.Model):
 
 
 @receiver(models.signals.post_save, sender=UserProfile)
-def invalidate_user_profile_country_cache(sender, instance, **kwargs):  # pylint:   disable=unused-argument, invalid-name
+def invalidate_user_profile_country_cache(sender, instance, **kwargs):  # pylint:   disable=unused-argument
     """Invalidate the cache of country in UserProfile model. """
 
     changed_fields = getattr(instance, '_changed_fields', {})
@@ -658,7 +717,6 @@ def user_profile_post_save_callback(sender, **kwargs):
     Emit analytics events after saving the UserProfile.
     """
     user_profile = kwargs['instance']
-    # pylint: disable=protected-access
     emit_field_changed_events(
         user_profile,
         user_profile.user,
@@ -713,7 +771,6 @@ def user_post_save_callback(sender, **kwargs):
     # Because `emit_field_changed_events` removes the record of the fields that
     # were changed, wait to do that until after we've checked them as part of
     # the condition on whether we want to check for automatic enrollments.
-    # pylint: disable=protected-access
     emit_field_changed_events(
         user,
         user,
@@ -1094,17 +1151,6 @@ class CourseEnrollment(models.Model):
     def course_price(self):
         return get_cosmetic_verified_display_price(self.course)
 
-    @property
-    def course_id(self):
-        return self._course_id
-
-    @course_id.setter
-    def course_id(self, value):
-        if isinstance(value, six.string_types):
-            self._course_id = CourseKey.from_string(value)
-        else:
-            self._course_id = value
-
     created = models.DateTimeField(auto_now_add=True, null=True, db_index=True)
 
     # If is_active is False, then the student is not considered to be enrolled
@@ -1241,32 +1287,11 @@ class CourseEnrollment(models.Model):
             return None
 
     @classmethod
-    def get_program_enrollment(cls, user, course_id):
-        """
-        Return the ProgramEnrollment associated with the CourseEnrollment specified
-        by the user and course_id.
-        Return None if there is no ProgramEnrollment.
-
-        Arguments:
-            user (User): the user for whom we want the program enrollment
-            course_id (CourseKey): the id of the course the user has a course enrollment in
-
-        Returns:
-            ProgramEnrollment object or None
-        """
-        try:
-            course_enrollment = cls.objects.get(user=user, course_id=course_id)
-            return course_enrollment.programcourseenrollment.program_enrollment
-        except (ObjectDoesNotExist):
-            return None
-
-    @classmethod
     def is_enrollment_closed(cls, user, course):
         """
         Returns a boolean value regarding whether the user has access to enroll in the course. Returns False if the
         enrollment has been closed.
         """
-        # pylint: disable=import-error
         from openedx.core.djangoapps.enrollments.permissions import ENROLL_IN_COURSE
         return not user.has_perm(ENROLL_IN_COURSE, course)
 
@@ -1323,7 +1348,8 @@ class CourseEnrollment(models.Model):
                 sender=None,
                 user=self.user,
                 course_key=self.course_id,
-                countdown=SCORE_RECALCULATION_DELAY_ON_ENROLLMENT_UPDATE
+                mode=self.mode,
+                countdown=SCORE_RECALCULATION_DELAY_ON_ENROLLMENT_UPDATE,
             )
 
     def send_signal(self, event, cost=None, currency=None):
@@ -2077,7 +2103,7 @@ class FBEEnrollmentExclusion(models.Model):
 
 @receiver(models.signals.post_save, sender=CourseEnrollment)
 @receiver(models.signals.post_delete, sender=CourseEnrollment)
-def invalidate_enrollment_mode_cache(sender, instance, **kwargs):  # pylint: disable=unused-argument, invalid-name
+def invalidate_enrollment_mode_cache(sender, instance, **kwargs):  # pylint: disable=unused-argument
     """
     Invalidate the cache of CourseEnrollment model.
     """
@@ -2281,7 +2307,7 @@ class CourseAccessRole(models.Model):
         """
         Lexigraphic sort
         """
-        return self._key < other._key  # pylint: disable=protected-access
+        return self._key < other._key
 
     def __str__(self):
         return "[CourseAccessRole] user: {}   role: {}   org: {}   course: {}".format(self.user.username, self.role, self.org, self.course_id)
@@ -2418,7 +2444,7 @@ def create_comments_service_user(user):
 
 
 @receiver(user_logged_in)
-def log_successful_login(sender, request, user, **kwargs):  # pylint: disable=unused-argument
+def log_successful_login(sender, request, user, **kwargs):
     """Handler to log when logins have occurred successfully."""
     if settings.FEATURES['SQUELCH_PII_IN_LOGS']:
         AUDIT_LOG.info(u"Login success - user.id: {0}".format(user.id))
@@ -2427,7 +2453,7 @@ def log_successful_login(sender, request, user, **kwargs):  # pylint: disable=un
 
 
 @receiver(user_logged_out)
-def log_successful_logout(sender, request, user, **kwargs):  # pylint: disable=unused-argument
+def log_successful_logout(sender, request, user, **kwargs):
     """Handler to log when logouts have occurred successfully."""
     if hasattr(request, 'user'):
         if settings.FEATURES['SQUELCH_PII_IN_LOGS']:
@@ -2438,7 +2464,7 @@ def log_successful_logout(sender, request, user, **kwargs):  # pylint: disable=u
 
 @receiver(user_logged_in)
 @receiver(user_logged_out)
-def enforce_single_login(sender, request, user, signal, **kwargs):    # pylint: disable=unused-argument
+def enforce_single_login(sender, request, user, signal, **kwargs):
     """
     Sets the current session id in the user profile,
     to prevent concurrent logins.
@@ -2704,7 +2730,7 @@ class LanguageProficiency(models.Model):
     )
 
 
-class SocialLink(models.Model):  # pylint: disable=model-missing-unicode
+class SocialLink(models.Model):
     """
     Represents a URL connecting a particular social platform to a user's social profile.
 
@@ -2912,21 +2938,6 @@ class UserAttribute(TimeStampedModel):
             return None
 
 
-@python_2_unicode_compatible
-class LogoutViewConfiguration(ConfigurationModel):
-    """
-    DEPRECATED: Configuration for the logout view.
-
-    .. no_pii:
-    """
-
-    def __str__(self):
-        """
-        Unicode representation of the instance.
-        """
-        return u'Logout view configuration: {enabled}'.format(enabled=self.enabled)
-
-
 class AccountRecoveryManager(models.Manager):
     """
     Custom Manager for AccountRecovery model
@@ -3014,4 +3025,16 @@ class AllowedAuthUser(TimeStampedModel):
             "able to login from login screen through email and password. And if any employee's email doesn't exist in "
             "this model then that employee can login via third party authentication backend only."),
         unique=True,
+    )
+
+
+class AccountRecoveryConfiguration(ConfigurationModel):
+    """
+    configuration model for recover account management command
+    """
+    csv_file = models.FileField(
+        validators=[FileExtensionValidator(allowed_extensions=[u'csv'])],
+        help_text=_(u"It expect that the data will be provided in a csv file format with \
+                    first row being the header and columns will be as follows: \
+                    username, email, new_email")
     )

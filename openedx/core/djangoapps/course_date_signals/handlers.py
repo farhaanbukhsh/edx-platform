@@ -6,9 +6,10 @@ import logging
 from django.dispatch import receiver
 from six import text_type
 from xblock.fields import Scope
+from xmodule.modulestore import ModuleStoreEnum
 from xmodule.modulestore.django import SignalHandler, modulestore
 from .models import SelfPacedRelativeDatesConfig
-from .utils import get_expected_duration
+from .utils import spaced_out_sections
 from edx_when.api import FIELDS_TO_EXTRACT, set_dates_for_course
 
 log = logging.getLogger(__name__)
@@ -48,22 +49,22 @@ def extract_dates_from_course(course):
         date_items = [(course.location, metadata)]
 
         if SelfPacedRelativeDatesConfig.current(course_key=course.id).enabled:
-            duration = get_expected_duration(course)
-            sections = course.get_children()
-            time_per_week = duration / len(sections)
             # Apply the same relative due date to all content inside a section,
             # unless that item already has a relative date set
-            for idx, section in enumerate(sections):
+            for _, section, weeks_to_complete in spaced_out_sections(course):
                 items = [section]
                 while items:
                     next_item = items.pop()
-                    # TODO: Once studio can manually set relative dates,
-                    # we would need to manually check for them here
-                    date_items.append((next_item.location, {'due': time_per_week * (idx + 1)}))
+                    if next_item.graded:
+                        # TODO: Once studio can manually set relative dates,
+                        # we would need to manually check for them here
+                        date_items.append((next_item.location, {'due': weeks_to_complete}))
                     items.extend(next_item.get_children())
     else:
         date_items = []
-        items = modulestore().get_items(course.id)
+        store = modulestore()
+        with store.branch_setting(ModuleStoreEnum.Branch.published_only, course.id):
+            items = store.get_items(course.id)
         log.info('Extracting dates from %d items in %s', len(items), course.id)
         for item in items:
             date_items.append((item.location, _field_values(FIELDS_TO_EXTRACT, item)))
@@ -75,7 +76,9 @@ def extract_dates(sender, course_key, **kwargs):  # pylint: disable=unused-argum
     """
     Extract dates from blocks when publishing a course.
     """
-    course = modulestore().get_course(course_key)
+    store = modulestore()
+    with store.branch_setting(ModuleStoreEnum.Branch.published_only, course_key):
+        course = store.get_course(course_key)
 
     if not course:
         log.info("No course found for key %s to extract dates from", course_key)

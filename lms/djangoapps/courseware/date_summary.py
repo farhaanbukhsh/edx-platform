@@ -20,7 +20,7 @@ from lazy import lazy
 from pytz import utc
 
 from course_modes.models import CourseMode, get_cosmetic_verified_display_price
-from lms.djangoapps.courseware.utils import verified_upgrade_deadline_link, verified_upgrade_link_is_valid
+from lms.djangoapps.courseware.utils import verified_upgrade_deadline_link, can_show_verified_upgrade
 from lms.djangoapps.verify_student.models import VerificationDeadline
 from lms.djangoapps.verify_student.services import IDVerificationService
 from openedx.core.djangoapps.catalog.utils import get_course_run_details
@@ -28,7 +28,7 @@ from openedx.core.djangoapps.certificates.api import can_show_certificate_availa
 from openedx.core.djangolib.markup import HTML, Text
 from openedx.features.course_duration_limits.access import get_user_course_expiration_date
 from openedx.features.course_duration_limits.models import CourseDurationLimitConfig
-from openedx.features.course_experience import DATE_WIDGET_V2_FLAG, UPGRADE_DEADLINE_MESSAGE, CourseHomeMessages
+from openedx.features.course_experience import RELATIVE_DATES_FLAG, UPGRADE_DEADLINE_MESSAGE, CourseHomeMessages
 from student.models import CourseEnrollment
 
 from .context_processor import user_timezone_locale_prefs
@@ -295,7 +295,7 @@ class CourseEndDate(DateSummary):
 
     @property
     def date(self):
-        if DATE_WIDGET_V2_FLAG.is_enabled(self.course_id) and self.course.self_paced:
+        if self.course.self_paced and RELATIVE_DATES_FLAG.is_enabled(self.course_id):
             weeks_to_complete = get_course_run_details(self.course.id, ['weeks_to_complete']).get('weeks_to_complete')
             if weeks_to_complete:
                 course_duration = datetime.timedelta(weeks=weeks_to_complete)
@@ -346,7 +346,9 @@ class CourseAssignmentDate(DateSummary):
         self.assignment_date = None
         self.assignment_title = None
         self.assignment_title_html = None
-        self.requires_full_access = None
+        self.contains_gated_content = False
+        self.complete = None
+        self.past_due = None
 
     @property
     def date(self):
@@ -488,7 +490,7 @@ class VerifiedUpgradeDeadlineDate(DateSummary):
         if not is_enabled:
             return False
 
-        return verified_upgrade_link_is_valid(self.enrollment)
+        return can_show_verified_upgrade(self.user, self.enrollment, self.course)
 
     @lazy
     def date(self):

@@ -14,6 +14,7 @@ from completion.test_utils import CompletionWaffleTestMixin
 from django.contrib.sites.models import Site
 from django.test import override_settings
 from django.urls import reverse
+from django.utils import timezone
 from milestones.tests.utils import MilestonesTestCaseMixin
 from mock import Mock, patch
 from opaque_keys.edx.keys import CourseKey, UsageKey
@@ -23,8 +24,11 @@ from waffle.models import Switch
 from waffle.testutils import override_switch
 
 from lms.djangoapps.courseware.tests.factories import StaffFactory
+from lms.urls import RESET_COURSE_DEADLINES_NAME
 from gating import api as lms_gating_api
 from lms.djangoapps.course_api.blocks.transformers.milestones import MilestonesAndSpecialExamsTransformer
+from openedx.core.djangoapps.schedules.models import Schedule
+from openedx.core.djangoapps.schedules.tests.factories import ScheduleFactory
 from openedx.core.lib.gating import api as gating_api
 from openedx.features.course_experience.views.course_outline import (
     DEFAULT_COMPLETION_TRACKING_START,
@@ -55,7 +59,7 @@ class TestCourseOutlinePage(SharedModuleStoreTestCase):
         # pylint: disable=super-method-not-called
         with super(TestCourseOutlinePage, cls).setUpClassAndTestData():
             cls.courses = []
-            course = CourseFactory.create()
+            course = CourseFactory.create(self_paced=True)
             with cls.store.bulk_operations(course.id):
                 chapter = ItemFactory.create(category='chapter', parent_location=course.location)
                 sequential = ItemFactory.create(category='sequential', parent_location=chapter.location)
@@ -131,6 +135,118 @@ class TestCourseOutlinePage(SharedModuleStoreTestCase):
                         self.assertContains(response, sequential.due.strftime(u'%Y-%m-%d %H:%M:%S'))
                         self.assertContains(response, sequential.format)
                     self.assertTrue(sequential.children)
+
+    def test_num_graded_problems(self):
+        course = CourseFactory.create()
+        with self.store.bulk_operations(course.id):
+            chapter = ItemFactory.create(category='chapter', parent_location=course.location)
+            sequential = ItemFactory.create(category='sequential', parent_location=chapter.location)
+            problem = ItemFactory.create(category='problem', parent_location=sequential.location)
+            sequential2 = ItemFactory.create(category='sequential', parent_location=chapter.location)
+            problem2 = ItemFactory.create(category='problem', graded=True, has_score=True,
+                                          parent_location=sequential2.location)
+            sequential3 = ItemFactory.create(category='sequential', parent_location=chapter.location)
+            problem3_1 = ItemFactory.create(category='problem', graded=True, has_score=True,
+                                            parent_location=sequential3.location)
+            problem3_2 = ItemFactory.create(category='problem', graded=True, has_score=True,
+                                            parent_location=sequential3.location)
+        course.children = [chapter]
+        chapter.children = [sequential, sequential2, sequential3]
+        sequential.children = [problem]
+        sequential2.children = [problem2]
+        sequential3.children = [problem3_1, problem3_2]
+        CourseEnrollment.enroll(self.user, course.id)
+
+        url = course_home_url(course)
+        response = self.client.get(url)
+        content = response.content.decode('utf8')
+        self.assertRegex(content, sequential.display_name + r'\s*</h4>')
+        self.assertRegex(content, sequential2.display_name + r'\s*\(1 Question\)\s*</h4>')
+        self.assertRegex(content, sequential3.display_name + r'\s*\(2 Questions\)\s*</h4>')
+
+    def test_reset_course_deadlines(self):
+        course = self.courses[0]
+        enrollment = CourseEnrollment.objects.get(course_id=course.id)
+        ScheduleFactory(
+            start_date=timezone.now() - datetime.timedelta(1),
+            enrollment=enrollment
+        )
+        post_dict = {'reset_deadlines_redirect_url_id_dict': json.dumps({'course_id': str(course.id)})}
+        self.client.post(reverse(RESET_COURSE_DEADLINES_NAME), post_dict)
+        updated_schedule = Schedule.objects.get(enrollment=enrollment)
+        self.assertEqual(updated_schedule.start_date.date(), datetime.datetime.today().date())
+
+    def test_reset_course_deadlines_masquerade_specific_student(self):
+        course = self.courses[0]
+
+        student_schedule = ScheduleFactory(
+            start_date=timezone.now() - datetime.timedelta(1),
+            enrollment=CourseEnrollment.objects.get(course_id=course.id, user=self.user),
+        )
+        staff = StaffFactory(course_key=course.id)
+        staff_schedule = ScheduleFactory(
+            start_date=timezone.now() - datetime.timedelta(1),
+            enrollment__course__id=course.id,
+            enrollment__user=staff,
+        )
+
+        self.client.login(username=staff.username, password=TEST_PASSWORD)
+        masquerade_url = reverse(
+            'masquerade_update',
+            kwargs={
+                'course_key_string': six.text_type(course.id),
+            }
+        )
+        response = self.client.post(
+            masquerade_url,
+            json.dumps({"role": 'student', "group_id": None, "user_name": self.user.username}),
+            "application/json"
+        )
+
+        assert response.status_code == 200
+
+        post_dict = {'reset_deadlines_redirect_url_id_dict': json.dumps({'course_id': str(course.id)})}
+        self.client.post(reverse(RESET_COURSE_DEADLINES_NAME), post_dict)
+        updated_schedule = Schedule.objects.get(id=student_schedule.id)
+        self.assertEqual(updated_schedule.start_date.date(), datetime.datetime.today().date())
+        updated_staff_schedule = Schedule.objects.get(id=staff_schedule.id)
+        self.assertEqual(updated_staff_schedule.start_date, staff_schedule.start_date)
+
+    def test_reset_course_deadlines_masquerade_generic_student(self):
+        course = self.courses[0]
+
+        student_schedule = ScheduleFactory(
+            start_date=timezone.now() - datetime.timedelta(1),
+            enrollment=CourseEnrollment.objects.get(course_id=course.id, user=self.user),
+        )
+        staff = StaffFactory(course_key=course.id)
+        staff_schedule = ScheduleFactory(
+            start_date=timezone.now() - datetime.timedelta(1),
+            enrollment__course__id=course.id,
+            enrollment__user=staff,
+        )
+
+        self.client.login(username=staff.username, password=TEST_PASSWORD)
+        masquerade_url = reverse(
+            'masquerade_update',
+            kwargs={
+                'course_key_string': six.text_type(course.id),
+            }
+        )
+        response = self.client.post(
+            masquerade_url,
+            json.dumps({"role": 'student', "group_id": None, "user_name": None}),
+            "application/json"
+        )
+
+        assert response.status_code == 200
+
+        post_dict = {'reset_deadlines_redirect_url_id_dict': json.dumps({'course_id': str(course.id)})}
+        self.client.post(reverse(RESET_COURSE_DEADLINES_NAME), post_dict)
+        updated_student_schedule = Schedule.objects.get(id=student_schedule.id)
+        self.assertEqual(updated_student_schedule.start_date, student_schedule.start_date)
+        updated_staff_schedule = Schedule.objects.get(id=staff_schedule.id)
+        self.assertEqual(updated_staff_schedule.start_date.date(), datetime.datetime.today().date())
 
 
 class TestCourseOutlinePageWithPrerequisites(SharedModuleStoreTestCase, MilestonesTestCaseMixin):

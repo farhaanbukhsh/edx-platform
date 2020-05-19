@@ -20,7 +20,6 @@ from lms.djangoapps.certificates.apis.v0.views import CertificatesDetailView, Ce
 from lms.djangoapps.certificates.models import CertificateStatuses
 from lms.djangoapps.certificates.tests.factories import GeneratedCertificateFactory
 from openedx.core.djangoapps.content.course_overviews.tests.factories import CourseOverviewFactory
-from openedx.core.djangoapps.oauth_dispatch.toggles import ENFORCE_JWT_SCOPES
 from openedx.core.djangoapps.user_api.tests.factories import UserPreferenceFactory
 from openedx.core.djangoapps.user_authn.tests.utils import JWT_AUTH_TYPES, AuthAndScopesTestMixin, AuthType
 from student.tests.factories import UserFactory
@@ -170,7 +169,8 @@ class CertificatesListRestApiTest(AuthAndScopesTestMixin, SharedModuleStoreTestC
             download_url='www.google.com',
             grade="0.88",
         )
-
+        self.student.is_staff = True
+        self.student.save()
         self.namespaced_url = 'certificates_api:v0:certificates:list'
 
     def get_url(self, username):
@@ -202,22 +202,16 @@ class CertificatesListRestApiTest(AuthAndScopesTestMixin, SharedModuleStoreTestC
         )
 
     @patch('edx_rest_framework_extensions.permissions.log')
-    @ddt.data(*product(list(AuthType), (True, False)))
-    @ddt.unpack
-    def test_another_user(self, auth_type, scopes_enforced, mock_log):
+    @ddt.data(*list(AuthType))
+    def test_another_user(self, auth_type, mock_log):
         """
-        Returns 200 with empty list for OAuth, Session, and JWT auth.
-        Returns 200 for jwt_restricted and user:me filter unset.
+        Returns 403 response for non-staff user on all auth types.
         """
-        with ENFORCE_JWT_SCOPES.override(active=scopes_enforced):
-            resp = self.get_response(auth_type, requesting_user=self.other_student)
+        resp = self.get_response(auth_type, requesting_user=self.other_student)
+        self.assertEqual(resp.status_code, status.HTTP_403_FORBIDDEN)
 
-            self.assertEqual(resp.status_code, status.HTTP_200_OK)
-            self.assertEqual(len(resp.data), 0)
-
-    @ddt.data(*product(list(AuthType), (True, False)))
-    @ddt.unpack
-    def test_another_user_with_certs_shared_public(self, auth_type, scopes_enforced):
+    @ddt.data(*list(AuthType))
+    def test_another_user_with_certs_shared_public(self, auth_type):
         """
         Returns 200 with cert list for OAuth, Session, and JWT auth.
         Returns 200 for jwt_restricted and user:me filter unset.
@@ -230,15 +224,13 @@ class CertificatesListRestApiTest(AuthAndScopesTestMixin, SharedModuleStoreTestC
             value='all_users',
         ).save()
 
-        with ENFORCE_JWT_SCOPES.override(active=scopes_enforced):
-            resp = self.get_response(auth_type, requesting_user=self.other_student)
+        resp = self.get_response(auth_type, requesting_user=self.global_staff)
 
-            self.assertEqual(resp.status_code, status.HTTP_200_OK)
-            self.assertEqual(len(resp.data), 1)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(resp.data), 1)
 
-    @ddt.data(*product(list(AuthType), (True, False)))
-    @ddt.unpack
-    def test_another_user_with_certs_shared_custom(self, auth_type, scopes_enforced):
+    @ddt.data(*list(AuthType))
+    def test_another_user_with_certs_shared_custom(self, auth_type):
         """
         Returns 200 with cert list for OAuth, Session, and JWT auth.
         Returns 200 for jwt_restricted and user:me filter unset.
@@ -256,39 +248,35 @@ class CertificatesListRestApiTest(AuthAndScopesTestMixin, SharedModuleStoreTestC
             value='all_users',
         ).save()
 
-        with ENFORCE_JWT_SCOPES.override(active=scopes_enforced):
-            resp = self.get_response(auth_type, requesting_user=self.other_student)
+        resp = self.get_response(auth_type, requesting_user=self.global_staff)
 
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(resp.data), 1)
+
+    @patch('edx_rest_framework_extensions.permissions.log')
+    @ddt.data(*JWT_AUTH_TYPES)
+    def test_jwt_on_behalf_of_other_user(self, auth_type, mock_log):
+        """ Returns 403 when scopes are enforced with JwtHasUserFilterForRequestedUser. """
+        jwt_token = self._create_jwt_token(self.global_staff, auth_type, include_me_filter=True)
+        resp = self.get_response(AuthType.jwt, token=jwt_token)
+
+        if auth_type == AuthType.jwt_restricted:
+            self.assertEqual(resp.status_code, status.HTTP_403_FORBIDDEN)
+            self._assert_in_log("JwtHasUserFilterForRequestedUser", mock_log.warning)
+        else:
             self.assertEqual(resp.status_code, status.HTTP_200_OK)
             self.assertEqual(len(resp.data), 1)
 
     @patch('edx_rest_framework_extensions.permissions.log')
-    @ddt.data(*product(JWT_AUTH_TYPES, (True, False)))
-    @ddt.unpack
-    def test_jwt_on_behalf_of_other_user(self, auth_type, scopes_enforced, mock_log):
-        """ Returns 403 when scopes are enforced with JwtHasUserFilterForRequestedUser. """
-        with ENFORCE_JWT_SCOPES.override(active=scopes_enforced):
-            jwt_token = self._create_jwt_token(self.other_student, auth_type, include_me_filter=True)
-            resp = self.get_response(AuthType.jwt, token=jwt_token)
-
-            if scopes_enforced and auth_type == AuthType.jwt_restricted:
-                self.assertEqual(resp.status_code, status.HTTP_403_FORBIDDEN)
-                self._assert_in_log("JwtHasUserFilterForRequestedUser", mock_log.warning)
-            else:
-                self.assertEqual(resp.status_code, status.HTTP_200_OK)
-                self.assertEqual(len(resp.data), 0)
-
-    @patch('edx_rest_framework_extensions.permissions.log')
-    @ddt.data(*product(JWT_AUTH_TYPES, (True, False)))
-    @ddt.unpack
-    def test_jwt_no_filter(self, auth_type, scopes_enforced, mock_log):
+    @ddt.data(*JWT_AUTH_TYPES)
+    def test_jwt_no_filter(self, auth_type, mock_log):
         self.assertTrue(True)  # pylint: disable=redundant-unittest-assert
 
     def test_no_certificate(self):
         student_no_cert = UserFactory.create(password=self.user_password)
         resp = self.get_response(
             AuthType.session,
-            requesting_user=student_no_cert,
+            requesting_user=self.global_staff,
             requested_user=student_no_cert,
         )
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
@@ -297,20 +285,20 @@ class CertificatesListRestApiTest(AuthAndScopesTestMixin, SharedModuleStoreTestC
     def test_query_counts(self):
         # Test student with no certificates
         student_no_cert = UserFactory.create(password=self.user_password)
-        with self.assertNumQueries(21):
+        with self.assertNumQueries(20):
             resp = self.get_response(
                 AuthType.jwt,
-                requesting_user=student_no_cert,
+                requesting_user=self.global_staff,
                 requested_user=student_no_cert,
             )
             self.assertEqual(resp.status_code, status.HTTP_200_OK)
             self.assertEqual(len(resp.data), 0)
 
         # Test student with 1 certificate
-        with self.assertNumQueries(14):
+        with self.assertNumQueries(10):
             resp = self.get_response(
                 AuthType.jwt,
-                requesting_user=self.student,
+                requesting_user=self.global_staff,
                 requested_user=self.student,
             )
             self.assertEqual(resp.status_code, status.HTTP_200_OK)
@@ -347,10 +335,10 @@ class CertificatesListRestApiTest(AuthAndScopesTestMixin, SharedModuleStoreTestC
             download_url='www.google.com',
             grade="0.88",
         )
-        with self.assertNumQueries(14):
+        with self.assertNumQueries(10):
             resp = self.get_response(
                 AuthType.jwt,
-                requesting_user=student_2_certs,
+                requesting_user=self.global_staff,
                 requested_user=student_2_certs,
             )
             self.assertEqual(resp.status_code, status.HTTP_200_OK)
@@ -367,7 +355,7 @@ class CertificatesListRestApiTest(AuthAndScopesTestMixin, SharedModuleStoreTestC
 
         response = self.get_response(
             AuthType.jwt,
-            requesting_user=self.student,
+            requesting_user=self.global_staff,
             requested_user=self.student,
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -378,9 +366,35 @@ class CertificatesListRestApiTest(AuthAndScopesTestMixin, SharedModuleStoreTestC
 
         response = self.get_response(
             AuthType.jwt,
-            requesting_user=self.student,
+            requesting_user=self.global_staff,
             requested_user=self.student,
         )
         kwargs = {"certificate_uuid": self.cert.verify_uuid}
         expected_download_url = reverse('certificates:render_cert_by_uuid', kwargs=kwargs)
         self.assert_success_response_for_student(response, download_url=expected_download_url)
+
+    @patch('lms.djangoapps.certificates.apis.v0.views.get_course_run_details')
+    def test_certificate_without_course(self, mock_get_course_run_details):
+        """
+        Verify that certificates are returned for deleted XML courses.
+        """
+        expected_course_name = 'Test Course Title'
+        mock_get_course_run_details.return_value = {'title': expected_course_name}
+        xml_course_key = self.store.make_course_key('edX', 'testDeletedCourse', '2020')
+        cert_for_deleted_course = GeneratedCertificateFactory.create(
+            user=self.student,
+            course_id=xml_course_key,
+            status=CertificateStatuses.downloadable,
+            mode='honor',
+            download_url='www.edx.org/honor-cert-for-deleted-course.pdf',
+            grade="0.88"
+        )
+
+        response = self.get_response(
+            AuthType.jwt,
+            requesting_user=self.global_staff,
+            requested_user=self.student,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertContains(response, cert_for_deleted_course.download_url)
+        self.assertContains(response, expected_course_name)

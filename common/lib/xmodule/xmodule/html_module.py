@@ -116,7 +116,6 @@ class HtmlBlock(
 
     def get_html(self):
         """ Returns html required for rendering the block. """
-        # pylint: disable=no-member
         if self.data:
             data = self.data
             if getattr(self.runtime, 'anonymous_student_id', None):
@@ -464,7 +463,6 @@ class CourseInfoBlock(CourseInfoFields, HtmlBlock):
 
         # When we switch this to an XBlock, we can merge this with student_view,
         # but for now the XModule mixin requires that this method be defined.
-        # pylint: disable=no-member
         data = HtmlBlock.get_html(self)
         if data != "":
             return data

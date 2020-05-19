@@ -2,10 +2,8 @@
 Course API Serializers.  Representing course catalog data
 """
 
-from django.urls import reverse
 from rest_framework import serializers
 
-from lms.djangoapps.courseware.tabs import get_course_tab_list
 from openedx.core.lib.api.fields import AbsoluteURLField
 
 
@@ -63,6 +61,9 @@ class CourseInfoSerializer(serializers.Serializer):  # pylint: disable=abstract-
     Compare this with CourseDetailSerializer.
     """
 
+    can_show_upgrade_sock = serializers.BooleanField()
+    content_type_gating_enabled = serializers.BooleanField()
+    course_expired_message = serializers.CharField()
     effort = serializers.CharField()
     end = serializers.DateTimeField()
     enrollment_start = serializers.DateTimeField()
@@ -71,6 +72,7 @@ class CourseInfoSerializer(serializers.Serializer):  # pylint: disable=abstract-
     media = _CourseApiMediaCollectionSerializer(source='*')
     name = serializers.CharField(source='display_name_with_default_escaped')
     number = serializers.CharField(source='display_number_with_default')
+    offer_html = serializers.CharField()
     org = serializers.CharField(source='display_org_with_default')
     short_description = serializers.CharField()
     start = serializers.DateTimeField()
@@ -78,8 +80,12 @@ class CourseInfoSerializer(serializers.Serializer):  # pylint: disable=abstract-
     start_type = serializers.CharField()
     pacing = serializers.CharField()
     enrollment = serializers.DictField()
-    user_has_access = serializers.BooleanField()
-    tabs = serializers.SerializerMethodField()
+    tabs = serializers.ListField()
+    verified_mode = serializers.DictField()
+    show_calculator = serializers.BooleanField()
+    is_staff = serializers.BooleanField()
+    can_load_courseware = serializers.DictField()
+    notes = serializers.DictField()
 
     def __init__(self, *args, **kwargs):
         """
@@ -93,18 +99,3 @@ class CourseInfoSerializer(serializers.Serializer):  # pylint: disable=abstract-
             existing = set(self.fields)
             for field_name in existing - allowed:
                 self.fields.pop(field_name)
-
-    def get_tabs(self, course_overview):
-        """
-        Return course tab metadata.
-        """
-        tabs = []
-        for priority, tab in enumerate(get_course_tab_list(course_overview.effective_user, course_overview)):
-            tabs.append({
-                'title': tab.title,
-                'slug': tab.tab_id,
-                'priority': priority,
-                'type': tab.type,
-                'url': tab.link_func(course_overview, reverse),
-            })
-        return tabs

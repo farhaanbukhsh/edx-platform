@@ -5,20 +5,26 @@ Views to show a course outline.
 
 import datetime
 import re
+import six
 
 from completion import waffle as completion_waffle
 from django.contrib.auth.models import User
+from django.shortcuts import redirect
 from django.template.context_processors import csrf
 from django.template.loader import render_to_string
+from django.urls import reverse
+from django.views.decorators.csrf import ensure_csrf_cookie
 import edx_when.api as edx_when_api
 from opaque_keys.edx.keys import CourseKey
 from pytz import UTC
 from waffle.models import Switch
 from web_fragments.fragment import Fragment
 
+from lms.djangoapps.courseware.access import has_access
 from lms.djangoapps.courseware.courses import get_course_overview_with_access
+from lms.djangoapps.courseware.masquerade import setup_masquerade
 from openedx.core.djangoapps.plugin_api.views import EdxFragmentView
-from student.models import CourseEnrollment
+from openedx.core.djangoapps.schedules.utils import reset_self_paced_schedule
 from util.milestones_helpers import get_course_content_milestones
 from xmodule.course_module import COURSE_VISIBILITY_PUBLIC
 from xmodule.modulestore.django import modulestore

@@ -85,6 +85,7 @@
 # This file is distributed under the GNU AFFERO GENERAL PUBLIC LICENSE.
 #
 # Translators:
+# abc Def <hdogan1974@gmail.com>, 2020
 # adem ÖZGÜR <admozgur@gmail.com>, 2015
 # Ali Işıngör <ali@artistanbul.io>, 2018-2020
 # ali selek <aliselek01@gmail.com>, 2015
@@ -128,7 +129,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: 0.1a\n"
 "Report-Msgid-Bugs-To: openedx-translation@googlegroups.com\n"
-"POT-Creation-Date: 2020-02-23 20:42+0000\n"
+"POT-Creation-Date: 2020-05-03 20:42+0000\n"
 "PO-Revision-Date: 2019-01-20 20:43+0000\n"
 "Last-Translator: Ali Işıngör <ali@artistanbul.io>, 2019\n"
 "Language-Team: Turkish (Turkey) (https://www.transifex.com/open-edx/teams/6205/tr_TR/)\n"
@@ -477,7 +478,7 @@ msgstr[1] "%(count)d öğrenci hesabının kilidi açıldı."
 #, python-brace-format
 msgid ""
 "Please add a key/value 'THIRD_PARTY_AUTH_ONLY_DOMAIN/{site_email_domain}' in"
-" SiteConfiguration model's values field."
+" SiteConfiguration model's site_values field."
 msgstr ""
 
 #: common/djangoapps/student/admin.py
@@ -767,6 +768,13 @@ msgid ""
 "that employee can login via third party authentication backend only."
 msgstr ""
 
+#: common/djangoapps/student/models.py
+msgid ""
+"It expect that the data will be provided in a csv file format with"
+"                     first row being the header and columns will be as "
+"follows:                     username, email, new_email"
+msgstr ""
+
 #: common/djangoapps/student/views/dashboard.py
 msgid " and "
 msgstr "ve"
@@ -820,6 +828,8 @@ msgid ""
 "Add a recovery email to retain access when single-sign on is not available. "
 "Go to {link_start}your Account Settings{link_end}."
 msgstr ""
+"Single-sign mevcut olmadığında erişimi sağlamak için bir kurtarma e-posta "
+"adresi ekleyin. {link_start}Hesap Ayarları{link_end} sayfasına gidin."
 
 #: common/djangoapps/student/views/dashboard.py
 msgid ""
@@ -936,16 +946,6 @@ msgstr "Eski e-posta adresi yenisiyle aynıdır."
 #: common/djangoapps/student/views/management.py
 msgid "Cannot be same as your sign in email address."
 msgstr "Giriş e-postası adresinizle aynı olamaz"
-
-#: common/djangoapps/student/views/management.py
-#: openedx/core/djangoapps/user_authn/views/registration_form.py
-#, python-brace-format
-msgid ""
-"It looks like {email} belongs to an existing account. Try again with a "
-"different email address."
-msgstr ""
-"Görünüşe göre {email} varolan bir hesaba ait. Farklı bir e-posta adresiyle "
-"tekrar deneyin."
 
 #: common/djangoapps/student/views/management.py
 msgid "Unable to send email activation link. Please try again later."
@@ -1678,9 +1678,8 @@ msgid "Cannot rescore problems with possible file submissions"
 msgstr "Olası dosya yüklemeleri olan problemler yeniden notlandırılamaz."
 
 #: common/lib/capa/capa/capa_problem.py
-#, python-brace-format
-msgid "Question {0}"
-msgstr "Soru {0}"
+msgid "Question {}"
+msgstr "Soru {}"
 
 #: common/lib/capa/capa/capa_problem.py
 #: common/lib/xmodule/xmodule/capa_base.py
@@ -5623,6 +5622,9 @@ msgid ""
 "the honor code established by {platform_name} and has completed all of the "
 "required tasks for this course under its guidelines."
 msgstr ""
+"{cert_type} sertifikası bir öğrencinin {platform_name} tarafından belirlenen"
+" etik kurallarına uymayı kabul ettiğini ve dersin tüm yönergelerine uyarak "
+"gerekli görevlerin hepsini tamamladığını belirtir."
 
 #. Translators:  This text describes the 'ID Verified' course certificate
 #. type, which is a higher level of
@@ -5637,6 +5639,11 @@ msgid ""
 "certificate also indicates that the identity of the learner has been checked"
 " and is valid."
 msgstr ""
+"{cert_type} sertifikası bir öğrencinin {platform_name} tarafından belirlenen"
+" etik kurallarına uymayı kabul ettiğini ve dersin tüm yönergelerine uyarak "
+"gerekli görevlerin hepsini tamamladığını belirtir. {cert_type} sertifikası "
+"aynı zamanda öğrencinin kimliğinin kontrol edilerek doğrulandığına da işaret"
+" eder."
 
 #. Translators:  This text describes the 'XSeries' course certificate type.
 #. An XSeries is a collection of
@@ -6035,6 +6042,14 @@ msgstr "Bu ders için erişime sahip değilsiniz"
 msgid "You do not have access to this course on a mobile device"
 msgstr "Bu ders için mobil cihazlardan erişime sahip değilsiniz"
 
+#: lms/djangoapps/courseware/access_response.py
+msgid "You must be enrolled in the course"
+msgstr ""
+
+#: lms/djangoapps/courseware/access_response.py
+msgid "You must be logged in to see this course"
+msgstr ""
+
 #: lms/djangoapps/courseware/course_tools.py
 #: lms/templates/dashboard/_dashboard_course_listing.html
 msgid "Upgrade to Verified"
@@ -6042,7 +6057,7 @@ msgstr "Onaylanmışa Yükselt"
 
 #: lms/djangoapps/courseware/courses.py
 msgid "Assignment"
-msgstr ""
+msgstr "Görev"
 
 #. Translators: 'absolute' is a date such as "Jan 01,
 #. 2020". 'relative' is a fuzzy description of the time until
@@ -6119,7 +6134,7 @@ msgstr ""
 
 #: lms/djangoapps/courseware/date_summary.py
 msgid "You lose all access to this course, including your progress."
-msgstr ""
+msgstr "Bu derse ilerlemeniz dahil, tüm erişiminizi kaybedeceksiniz."
 
 #: lms/djangoapps/courseware/date_summary.py
 msgid "Audit Access Expires"
@@ -6302,6 +6317,10 @@ msgstr "İlerleme"
 #: cms/templates/widgets/header.html
 msgid "Textbooks"
 msgstr "Ders Kitapları"
+
+#: lms/djangoapps/courseware/tabs.py
+msgid "Dates"
+msgstr "Tarihler"
 
 #: lms/djangoapps/courseware/views/index.py
 #, python-brace-format
@@ -6854,6 +6873,8 @@ msgid ""
 "The number of seconds to delay/timeout wait to get cookie values from "
 "sailthru."
 msgstr ""
+"Çerez değerlerini Sailthru'dan çekerken beklenecek saniye cinsinden "
+"süre/gecikme."
 
 #: lms/djangoapps/instructor/paidcourse_enrollment_report.py
 #, python-brace-format
@@ -7650,14 +7671,14 @@ msgstr "0 gönderilen"
 msgid "{num_emails} sent"
 msgid_plural "{num_emails} sent"
 msgstr[0] ""
-msgstr[1] "Gönderilen e-posta sayısı {num_emails}"
+msgstr[1] "{num_emails} e-posta gönderildi"
 
 #: lms/djangoapps/instructor/views/instructor_task_helpers.py
 #, python-brace-format
 msgid "{num_emails} failed"
 msgid_plural "{num_emails} failed"
 msgstr[0] ""
-msgstr[1] "Gönderilemeyen e-posta sayısı {num_emails}"
+msgstr[1] "{num_emails} e-posta gönderilemedi"
 
 #: lms/djangoapps/instructor/views/instructor_task_helpers.py
 msgid "Complete"
@@ -7703,6 +7724,10 @@ msgstr "Tarih okunamadı:"
 #, python-brace-format
 msgid "Couldn't find module for url: {0}"
 msgstr "url: {0} için modül bulunamadı"
+
+#: lms/djangoapps/instructor/views/tools.py
+msgid "Could not find student enrollment in the course."
+msgstr ""
 
 #: lms/djangoapps/instructor/views/tools.py
 #, python-brace-format
@@ -8293,12 +8318,12 @@ msgid "{mode_name} for course {course}"
 msgstr "{course} dersi için {mode_name}"
 
 #: lms/djangoapps/shoppingcart/models.py
+#, python-brace-format
 msgid ""
-"You can unenroll in the course and receive a full refund for 14 days after "
-"the course start date. "
+"To receive a refund you may unenroll from the course on your edX Dashboard "
+"({dashboard_url}) up to 14 days after your payment or 14 days after your "
+"course starts (up to six months after your payment).\n"
 msgstr ""
-"Dersin başlangıç tarihinden sonraki 14 gün içerisinde silebilir ve paranızı "
-"tamamen geri alabilirsiniz."
 
 #: lms/djangoapps/shoppingcart/models.py
 #, python-brace-format
@@ -8312,21 +8337,15 @@ msgstr ""
 #: lms/djangoapps/shoppingcart/models.py
 msgid ""
 "You can unenroll in the course and receive a full refund for 2 days after "
-"the course start date. "
+"the course start date.\n"
 msgstr ""
-"Dersten kaydınızı dersin başlangıç tarihinden sonraki 2 gün içerisinde "
-"silebilir ve paranızı tamamen geri alabilirsiniz."
 
 #: lms/djangoapps/shoppingcart/models.py
 #, python-brace-format
 msgid ""
-"{refund_reminder_msg}To receive your refund, contact {billing_email}. Please"
-" include your order number in your email. Please do NOT include your credit "
-"card information."
+"{refund_reminder_msg}For help unenrolling, Please see How do I unenroll from"
+" a course? ({how_to_unenroll_link}) in our edX HelpCenter."
 msgstr ""
-"{refund_reminder_msg}İadenizi almak için {billing_email} adresinden "
-"iletişime geçin. Lütfen mail'e sipariş numaranızı ekleyin. Lütfen kredi "
-"kartı bilginizi EKLEMEYİN."
 
 #: lms/djangoapps/shoppingcart/models.py
 #, python-brace-format
@@ -9050,6 +9069,14 @@ msgstr "Program Kayıtlanma Bağlantısı"
 msgid "Link LMS users to program enrollments"
 msgstr ""
 
+#: lms/djangoapps/support/views/index.py
+msgid "Program Enrollments Inspector Tool"
+msgstr ""
+
+#: lms/djangoapps/support/views/index.py
+msgid "Find information related to a learner's program enrollments"
+msgstr ""
+
 #: lms/djangoapps/support/views/manage_user.py
 msgid "user_support_url"
 msgstr "kullanıcı_destek_url"
@@ -9113,6 +9140,10 @@ msgstr "{course_id} dersinden {user} kullanıcısının kaydı silindi"
 msgid "Refunded {cost} for order id {order_id}"
 msgstr "Kimliği {order_id} olan sipariş için {cost} iade edildi."
 
+#: lms/djangoapps/survey/utils.py
+msgid "You must complete a survey"
+msgstr ""
+
 #: lms/djangoapps/teams/models.py
 msgid "Optional language the team uses as ISO 639-1 code."
 msgstr "Takımın ISO 639-1 kodu olarak kullandığı isteğe bağlı dil."
@@ -9159,16 +9190,32 @@ msgid "The supplied course_id {course_id} is not valid."
 msgstr "Belirtilen ders_kimliği {course_id} geçerli değil."
 
 #: lms/djangoapps/teams/views.py
-msgid "You are already in a team in this course."
-msgstr "Bu derste zaten bir takıma üyesiniz."
+msgid "topic_id is required"
+msgstr ""
 
 #: lms/djangoapps/teams/views.py
 msgid "You can't create a team in an instructor managed topic."
 msgstr ""
 
 #: lms/djangoapps/teams/views.py
-msgid "username or team_id must be specified."
-msgstr "kullanıcı adı veya takım_kimliği belirtilmelidir."
+msgid "You are already in a team in this teamset."
+msgstr ""
+
+#: lms/djangoapps/teams/views.py
+msgid "teamset_id and team_id are mutually exclusive options."
+msgstr ""
+
+#: lms/djangoapps/teams/views.py
+msgid "teamset_id requires course_id to also be provided."
+msgstr ""
+
+#: lms/djangoapps/teams/views.py
+msgid "No teamset found in given course with given id"
+msgstr ""
+
+#: lms/djangoapps/teams/views.py
+msgid "username or (team_id or teamset_id) must be specified."
+msgstr ""
 
 #: lms/djangoapps/teams/views.py
 msgid "Username is required."
@@ -9347,6 +9394,10 @@ msgid "It is recommended that you change your password."
 msgstr "Parolanı değiştirmen önerilmektedir."
 
 #: lms/templates/instructor/edx_ace/accountcreationandenrollment/email/body.html
+msgid "You may access your course."
+msgstr ""
+
+#: lms/templates/instructor/edx_ace/accountcreationandenrollment/email/body.html
 #: lms/templates/instructor/edx_ace/accountcreationandenrollment/email/body.txt
 #, python-format
 msgid "Sincerely yours, The %(course_name)s Team"
@@ -9360,6 +9411,11 @@ msgid ""
 msgstr ""
 "Başlamak için, lütfen https://%(site_name)s adresini ziyaret edin. "
 "Hesabınızın giriş bilgileri aşağıda belirtildiği gibidir. "
+
+#: lms/templates/instructor/edx_ace/accountcreationandenrollment/email/body.txt
+#, python-format
+msgid "You may access your course at: %(course_url)s."
+msgstr ""
 
 #: lms/templates/instructor/edx_ace/accountcreationandenrollment/email/subject.txt
 #: lms/templates/instructor/edx_ace/enrollenrolled/email/subject.txt
@@ -9492,6 +9548,8 @@ msgid ""
 "Please finish your registration and fill out the registration form making "
 "sure to use %(email_address)s in the Email field:"
 msgstr ""
+"Kaydınızı bitirmek için lütfen kayıt formunu doldurun ve e-posta "
+"alanına%(email_address)s adresinizi girdiğinizden emin olun:"
 
 #: lms/templates/instructor/edx_ace/allowedenroll/email/body.html
 msgid "Finish Your Registration"
@@ -9579,6 +9637,8 @@ msgid ""
 "You have been unenrolled from the course %(course_name)s by a member of the "
 "course staff. Please disregard the invitation previously sent."
 msgstr ""
+"Bir ders görevlisi tarafından %(course_name)s dersinden kaydınız silindi. "
+"Lütfen daha önce gönderilen davetiyeyi dikkate almayın. "
 
 #: lms/templates/instructor/edx_ace/allowedunenroll/email/body.txt
 msgid "Dear Student,"
@@ -9603,6 +9663,9 @@ msgid ""
 "of the course staff. This course will no longer appear on your %(site_name)s"
 " dashboard."
 msgstr ""
+"Bir akademik personel tarafından %(site_name)s platformundaki "
+"%(course_name)s dersinden kaydınız silindi. Bu ders %(site_name)s "
+"panelinizde artık görünmeyecek."
 
 #: lms/templates/instructor/edx_ace/enrolledunenroll/email/body.html
 #: lms/templates/instructor/edx_ace/enrolledunenroll/email/body.txt
@@ -9640,6 +9703,9 @@ msgid ""
 "the course staff. This course will now appear on your %(site_name)s "
 "dashboard."
 msgstr ""
+"Bir akademik personel tarafından %(site_name)s platformundaki "
+"%(course_name)s dersine kaydedildiniz. Bu ders %(site_name)s panelinizde "
+"görünecek."
 
 #: lms/templates/instructor/edx_ace/enrollenrolled/email/body.html
 msgid "Access the Course Materials Now"
@@ -9677,6 +9743,9 @@ msgid ""
 "by a member of the course staff. This course will remain on your dashboard, "
 "but you will no longer be part of the beta testing group."
 msgstr ""
+"%(site_name)s platformundaki %(course_name)s dersinin beta testinden bir "
+"akademik personel tarafından çıkarıldınız. Ders panelinizde kalacak, ama "
+"artık beta test grubunun bir parçası olmayacaksınız."
 
 #: lms/templates/instructor/edx_ace/removebetatester/email/subject.txt
 #, python-format
@@ -10156,6 +10225,8 @@ msgid ""
 "Markdown syntax is allowed. See the %(start_link)scheatsheet%(end_link)s for"
 " help."
 msgstr ""
+"Markdown yazımına izin verilmektedir. Yardım için "
+"%(start_link)sipuçları%(end_link)ssayfasına bakın."
 
 #: lms/templates/wiki/plugins/attachments/index.html
 #: wiki/plugins/attachments/wiki_plugin.py
@@ -10461,6 +10532,11 @@ msgstr ""
 "Ben, ve şirketim, {link_start}{platform_name} API Kullanım "
 "Koşulları'nı{link_end} kabul ediyoruz."
 
+#: openedx/core/djangoapps/auth_exchange/forms.py
+#, python-format
+msgid "'%s' is not a valid scope."
+msgstr ""
+
 #: openedx/core/djangoapps/bookmarks/apps.py
 #: openedx/features/course_bookmarks/plugins.py
 #: openedx/features/course_bookmarks/views/course_bookmarks.py
@@ -10517,6 +10593,8 @@ msgid ""
 "Specified in seconds. Enable caching of API responses by setting this to a "
 "value greater than 0."
 msgstr ""
+"Saniyelerle belirtilmiştir. Bu değeri 0'dan fazla bir değer belirleyerek API"
+" cevaplarını önbelleklemeyi etkinleştirin."
 
 #: openedx/core/djangoapps/catalog/models.py
 msgid "Long Term Cache Time To Live"
@@ -10621,6 +10699,10 @@ msgstr ""
 #: openedx/core/djangoapps/content_libraries/models.py
 msgid "Read-only"
 msgstr "Salt-okunur"
+
+#: openedx/core/djangoapps/content_libraries/models.py
+msgid "One and only one of 'user' and 'group' must be set."
+msgstr ""
 
 #: openedx/core/djangoapps/cors_csrf/models.py
 msgid ""
@@ -11709,15 +11791,6 @@ msgid ""
 "{link_start}{provider} account{link_end}."
 msgstr ""
 
-#. Translators: This example email address is used as a placeholder in
-#. a field on the login form meant to hold the user's email address.
-#. Translators: This example email address is used as a placeholder in
-#. a field on the password reset form meant to hold the user's email address.
-#: openedx/core/djangoapps/user_authn/views/login_form.py
-#: openedx/core/djangoapps/user_authn/views/password_reset.py
-msgid "username@domain.com"
-msgstr "mehmet@siteadi.com"
-
 #. Translators: These instructions appear on the login form, immediately
 #. below a field meant to hold the user's email address.
 #. Translators: These instructions appear on the password reset form,
@@ -11734,6 +11807,12 @@ msgstr ""
 msgid "Create Account"
 msgstr "Hesap Oluştur"
 
+#. Translators: This example email address is used as a placeholder in
+#. a field on the password reset form meant to hold the user's email address.
+#: openedx/core/djangoapps/user_authn/views/password_reset.py
+msgid "username@domain.com"
+msgstr "mehmet@siteadi.com"
+
 #: openedx/core/djangoapps/user_authn/views/password_reset.py
 msgid ""
 "That e-mail address doesn't have an associated user account. Are you sure "
@@ -11749,6 +11828,11 @@ msgid ""
 msgstr ""
 "Bu e-posta adresi ile ilişkili kullanıcı hesabı parolasını sıfırlamak mümkün"
 " değil."
+
+#: openedx/core/djangoapps/user_authn/views/password_reset.py
+msgid ""
+"Your previous request is in progress, please try again in a few moments."
+msgstr ""
 
 #: openedx/core/djangoapps/user_authn/views/password_reset.py
 msgid "Password reset unsuccessful"
@@ -11771,11 +11855,6 @@ msgstr ""
 "{html_start}Parola Oluşturma Tamamlandı{html_end}Parolanız "
 "oluşturuldu.{bold_start}{email}{bold_end} artık birincil giriş e-posta "
 "adresiniz."
-
-#: openedx/core/djangoapps/user_authn/views/password_reset.py
-msgid ""
-"Your previous request is in progress, please try again in a few moments."
-msgstr ""
 
 #: openedx/core/djangoapps/user_authn/views/password_reset.py
 msgid "Some error occured during password change. Please try again"
@@ -11866,6 +11945,15 @@ msgstr "Bir veya daha fazla doldurulması gereken alanı boş bıraktınız"
 #: openedx/core/djangoapps/user_authn/views/registration_form.py
 msgid "Unauthorized email address."
 msgstr "Yetkisiz e-posta adresi."
+
+#: openedx/core/djangoapps/user_authn/views/registration_form.py
+#, python-brace-format
+msgid ""
+"It looks like {email} belongs to an existing account. Try again with a "
+"different email address."
+msgstr ""
+"Görünüşe göre {email} varolan bir hesaba ait. Farklı bir e-posta adresiyle "
+"tekrar deneyin."
 
 #. Translators: These instructions appear on the registration form,
 #. immediately
@@ -12092,6 +12180,55 @@ msgid ""
 msgstr ""
 "Giriş yapmadınız. Tartışma içeriğini görmek için, {sign_in_link} ya da "
 "{register_link}, ve bu derse kaydolun."
+
+#: openedx/features/calendar_sync/ics.py
+#, python-brace-format
+msgid "{assignment} is due for {course}."
+msgstr ""
+
+#: openedx/features/calendar_sync/plugins.py
+msgid "Calendar Sync"
+msgstr ""
+
+#: openedx/features/calendar_sync/plugins.py
+msgid "Unsubscribe from calendar updates"
+msgstr ""
+
+#: openedx/features/calendar_sync/plugins.py
+msgid "Subscribe to calendar updates"
+msgstr ""
+
+#: openedx/features/calendar_sync/views/management.py
+#, python-brace-format
+msgid "Updates for Your {course} Schedule"
+msgstr ""
+
+#: openedx/features/calendar_sync/views/management.py
+msgid "Update Your Calendar"
+msgstr ""
+
+#: openedx/features/calendar_sync/views/management.py
+#, python-brace-format
+msgid ""
+"Your assignment due dates for {course} were recently adjusted. Update your "
+"calendarwith your new schedule to ensure that you stay on track!"
+msgstr ""
+
+#: openedx/features/calendar_sync/views/management.py
+msgid "Stay on Track"
+msgstr ""
+
+#: openedx/features/calendar_sync/views/management.py
+msgid "Mark Your Calendar"
+msgstr ""
+
+#: openedx/features/calendar_sync/views/management.py
+#, python-brace-format
+msgid ""
+"Sticking to a schedule is the best way to ensure that you successfully "
+"complete your self-paced course. This schedule of assignment due dates for "
+"{course} will help you stay on track!"
+msgstr ""
 
 #: openedx/features/content_type_gating/models.py
 #: openedx/features/course_duration_limits/models.py
@@ -12613,7 +12750,7 @@ msgstr "HTML"
 
 #: cms/djangoapps/contentstore/views/component.py
 msgid "Problem"
-msgstr ""
+msgstr "Problem"
 
 #: cms/djangoapps/contentstore/views/component.py lms/templates/video.html
 msgid "Video"
@@ -12707,11 +12844,13 @@ msgstr "Ders git deposuna başarıyla aktarıldı"
 msgid "Vertical"
 msgstr "Dikey"
 
+#: cms/djangoapps/contentstore/views/helpers.py
 #: cms/templates/course_outline.html lms/templates/seq_module.html
 #: lms/templates/ccx/schedule.html
 msgid "Section"
 msgstr "Bölüm"
 
+#: cms/djangoapps/contentstore/views/helpers.py
 #: lms/templates/ccx/schedule.html
 msgid "Subsection"
 msgstr "Altbölüm"
@@ -12988,6 +13127,12 @@ msgstr "Altyazı Hazırlanıyor"
 #: cms/djangoapps/contentstore/views/videos.py
 msgid "Transcript Ready"
 msgstr "Altyazı Hazır"
+
+#. Translators: This is the status for a video whose transcription job was
+#. failed for some languages
+#: cms/djangoapps/contentstore/views/videos.py
+msgid "Partial Failure"
+msgstr ""
 
 #: cms/djangoapps/contentstore/views/videos.py
 msgid "An image file is required."
@@ -13895,7 +14040,6 @@ msgstr "{platform_name} sunucularında hata meydana geldi"
 
 #: lms/templates/module-error.html
 #: lms/templates/courseware/courseware-error.html
-#: lms/templates/courseware/error-message.html
 msgid ""
 "We're sorry, this module is temporarily unavailable. Our staff is working to"
 " fix it as soon as possible. Please email us at {tech_support_email} to "
@@ -13940,6 +14084,10 @@ msgstr "Önizleme modunu düzenle"
 #: lms/templates/preview_menu.html
 msgid "You are now viewing the course as {i_start}{user_name}{i_end}."
 msgstr "Dersi {i_start}{user_name}{i_end} kullanıcısı olarak inceliyorsunuz."
+
+#: lms/templates/preview_menu.html
+msgid "View this unit in the new experience"
+msgstr ""
 
 #: lms/templates/problem.html
 msgid "You have used {num_used} of {num_total} attempt"
@@ -14004,6 +14152,28 @@ msgstr "E-posta"
 #, python-format
 msgid "Return To %s"
 msgstr "%s e Geri Dön"
+
+#: lms/templates/reset_deadlines_banner.html
+msgid "It looks like you've missed some important deadlines. Visit "
+msgstr ""
+
+#: lms/templates/reset_deadlines_banner.html
+msgid "edx.org"
+msgstr ""
+
+#: lms/templates/reset_deadlines_banner.html
+msgid " to reset your deadlines and get started today."
+msgstr ""
+
+#: lms/templates/reset_deadlines_banner.html
+msgid ""
+"It looks like you've missed some important deadlines. Reset your deadlines "
+"and get started today."
+msgstr ""
+
+#: lms/templates/reset_deadlines_banner.html
+msgid "Reset my deadlines"
+msgstr ""
 
 #: lms/templates/resubscribe.html
 msgid "Re-subscribe Successful!"
@@ -15934,8 +16104,9 @@ msgid "You are enrolled in this course"
 msgstr "Bu derse kaydoldunuz"
 
 #: lms/templates/courseware/course_about.html
-#: lms/templates/dashboard/_dashboard_course_listing.html
+#: lms/templates/dashboard/_dashboard_course_resume.html
 #: lms/templates/shoppingcart/registration_code_receipt.html
+#: themes/edx.org/lms/templates/dashboard/_dashboard_course_resume.html
 msgid "View Course"
 msgstr "Derse Gözat"
 
@@ -16101,6 +16272,42 @@ msgstr ""
 msgid "Your score is {current_score}%. You have passed the entrance exam."
 msgstr "Puanınız {current_score}%. Giriş sınavını geçtiniz."
 
+#: lms/templates/courseware/dates.html lms/templates/courseware/syllabus.html
+msgid "{course.display_number_with_default} Course Info"
+msgstr "{course.display_number_with_default} Ders Bilgisi"
+
+#: lms/templates/courseware/dates.html
+msgid "Important Dates"
+msgstr ""
+
+#: lms/templates/courseware/dates.html
+msgid "You are auditing this course."
+msgstr ""
+
+#: lms/templates/courseware/dates.html
+msgid "This means that you are unable to participate in graded assignments."
+msgstr ""
+
+#: lms/templates/courseware/dates.html
+msgid ""
+"To complete graded assignments as part of this course, you can upgrade "
+"today."
+msgstr ""
+
+#: lms/templates/courseware/dates.html
+msgid "Due Today"
+msgstr ""
+
+#: lms/templates/courseware/dates.html
+msgid "Verified Only"
+msgstr ""
+
+#: lms/templates/courseware/error-message.html
+msgid ""
+"We're sorry, this module is temporarily unavailable. Our staff is working to"
+" fix it as soon as possible."
+msgstr ""
+
 #: lms/templates/courseware/gradebook.html
 msgid "Gradebook"
 msgstr "Karne"
@@ -16151,8 +16358,9 @@ msgid "Welcome to {course_title}!"
 msgstr "{course_title} dersine hoş geldiniz!"
 
 #: lms/templates/courseware/info.html
-#: lms/templates/dashboard/_dashboard_course_listing.html
+#: lms/templates/dashboard/_dashboard_course_resume.html
 #: openedx/features/course_experience/templates/course_experience/course-home-fragment.html
+#: themes/edx.org/lms/templates/dashboard/_dashboard_course_resume.html
 msgid "Resume Course"
 msgstr "Derse Devam Et"
 
@@ -16418,10 +16626,6 @@ msgstr "Alıştırma skorları gizlidir."
 #: lms/templates/courseware/progress.html
 msgid "No problem scores in this section"
 msgstr "Bu bölümde problemlerin notları bulunmuyor"
-
-#: lms/templates/courseware/syllabus.html
-msgid "{course.display_number_with_default} Course Info"
-msgstr "{course.display_number_with_default} Ders Bilgisi"
 
 #: lms/templates/courseware/welcome-back.html
 msgid ""
@@ -19854,42 +20058,6 @@ msgstr "İşareti Tut"
 msgid "Go Back"
 msgstr "Geri Dön"
 
-#: lms/templates/provider/authorize.html
-msgid ""
-"{start_strong}{application_name}{end_strong} would like to access your data "
-"with the following permissions:"
-msgstr ""
-"{start_strong}{application_name}{end_strong} uygulaması verilerinize erişmek"
-" için aşağıdaki izinleri istiyor:"
-
-#: lms/templates/provider/authorize.html
-msgid "Read your user ID"
-msgstr "Kullanıcı ID'nizi okuyun"
-
-#: lms/templates/provider/authorize.html
-msgid "Read your user profile"
-msgstr "Kullanıcı profilinizi okuyun"
-
-#: lms/templates/provider/authorize.html
-msgid "Read your email address"
-msgstr "E-posta adresinizi okuyun"
-
-#: lms/templates/provider/authorize.html
-msgid "Read the list of courses in which you are a staff member."
-msgstr "Ekip üyesi olduğunuz derslerin listesini okuyun."
-
-#: lms/templates/provider/authorize.html
-msgid "Read the list of courses in which you are an instructor."
-msgstr "Eğitmeni olduğunuz derslerin listesini okuyun."
-
-#: lms/templates/provider/authorize.html
-msgid "To see if you are a global staff user"
-msgstr "Global personel kullanıcısı olup olmadığınızı görün"
-
-#: lms/templates/provider/authorize.html
-msgid "Manage your data: {permission}"
-msgstr "Verilerinizi yönetin: {permission}"
-
 #: lms/templates/registration/account_activation_sidebar_notice.html
 msgid "Account Activation Info"
 msgstr "Hesap Etkinleştirme Bilgisi"
@@ -20364,11 +20532,8 @@ msgstr "Onaylama"
 #: lms/templates/static_templates/404.html
 msgid ""
 "The page that you were looking for was not found. Go back to the "
-"{link_start}homepage{link_end} or let us know about any pages that may have "
-"been moved at {email}."
+"{link_start}homepage{link_end} ."
 msgstr ""
-"Aradığınız sayfa bulunamadı. {link_start}anasayfaya{link_end} dönün veya "
-"yeri değiştirilen sayfaları bize {email} üzerinden bildirin."
 
 #: lms/templates/static_templates/about.html
 #: lms/templates/static_templates/blog.html
@@ -20421,23 +20586,15 @@ msgstr "Şu anda  {platform_name} sunucularında bir sorun yaşanmaktadır."
 #: lms/templates/static_templates/server-overloaded.html
 msgid ""
 "Our staff is currently working to get the site back up as soon as possible. "
-"Please email us at {tech_support_email} to report any problems or downtime."
 msgstr ""
-"Personelimiz şu anda mümkün olduğunca çabuk şekilde siteyi yedeklemek için "
-"çalışıyor. Lütfen {tech_support_email} üzerinde herhangi bir sorunu veya "
-"aksama süresini raporlamak için bize e-posta yollayın."
 
 #: lms/templates/static_templates/server-error.html
 msgid "There has been a 500 error on the {platform_name} servers"
 msgstr "{platform_name} Sunucu Hatası, Hata Kodu: 500"
 
 #: lms/templates/static_templates/server-error.html
-msgid ""
-"Please wait a few seconds and then reload the page. If the problem persists,"
-" please email us at {email}."
+msgid "Please wait a few seconds and then reload the page."
 msgstr ""
-"Lütfen bir kaç dakika bekleyin ve sayfayı yeniden yükleyin. Eğer sorun devam"
-" ederse, lütfen {email} adresine eposta atınız."
 
 #: lms/templates/static_templates/server-overloaded.html
 msgid "Currently the {platform_name} servers are overloaded"
@@ -20500,6 +20657,10 @@ msgstr "Sonuç bulunamadı"
 #: lms/templates/support/manage_user.html
 msgid "Student Support: Manage User"
 msgstr "Öğrenci Desteği: Kullanıcı Yönet"
+
+#: lms/templates/support/program_enrollments_inspector.html
+msgid "Program Enrollments Inspector"
+msgstr ""
 
 #: lms/templates/support/refund.html
 msgid "About to refund this order:"
@@ -20813,6 +20974,12 @@ msgid "Expand All"
 msgstr "Tümünü Aç"
 
 #: openedx/features/course_experience/templates/course_experience/course-outline-fragment.html
+msgid "({number} Question)"
+msgid_plural "({number} Questions)"
+msgstr[0] ""
+msgstr[1] ""
+
+#: openedx/features/course_experience/templates/course_experience/course-outline-fragment.html
 msgid "Prerequisite: "
 msgstr "Önkoşul:"
 
@@ -20913,6 +21080,14 @@ msgstr "Bu derste herhangi bir güncelleme yok."
 msgid "Latest Update"
 msgstr "Son Güncelleme"
 
+#: openedx/features/course_experience/templates/course_experience/next-up-banner-fragment.html
+msgid "Get started on what's next: "
+msgstr ""
+
+#: openedx/features/course_experience/templates/course_experience/welcome-message-fragment.html
+msgid "Show More"
+msgstr ""
+
 #: openedx/features/course_search/templates/course_search/course-search-fragment.html
 msgid "Search Results"
 msgstr "Arama Sonuçları"
@@ -21002,6 +21177,14 @@ msgid ""
 msgstr ""
 "Yeni eklenen dersleri tarayın  ve favori konularınız içinde yeni ne var "
 "görüntüleyin"
+
+#: themes/edx.org/lms/templates/dashboard.html
+msgid "Take advantage of free coaching!"
+msgstr ""
+
+#: themes/edx.org/lms/templates/dashboard.html
+msgid "Get Started"
+msgstr ""
 
 #: themes/edx.org/lms/templates/footer.html
 msgid "Page Footer"

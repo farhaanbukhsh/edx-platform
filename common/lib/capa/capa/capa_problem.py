@@ -21,9 +21,9 @@ from collections import OrderedDict
 from copy import deepcopy
 from datetime import datetime
 from xml.sax.saxutils import unescape
-from openedx.core.lib.edx_six import get_gettext
 
 import six
+from django.utils.encoding import python_2_unicode_compatible
 from lxml import etree
 from pytz import UTC
 
@@ -34,8 +34,8 @@ import capa.xqueue_interface as xqueue_interface
 from capa.correctmap import CorrectMap
 from capa.safe_exec import safe_exec
 from capa.util import contextualize_text, convert_files_to_filenames
-from django.utils.encoding import python_2_unicode_compatible
 from openedx.core.djangolib.markup import HTML, Text
+from openedx.core.lib.edx_six import get_gettext
 from xmodule.stringify import stringify_children
 
 # extra things displayed after "show answers" is pressed
@@ -95,20 +95,20 @@ class LoncapaSystem(object):
     See :class:`ModuleSystem` for documentation of other attributes.
 
     """
-    def __init__(                                       # pylint: disable=invalid-name
+    def __init__(
         self,
         ajax_url,
         anonymous_student_id,
         cache,
         can_execute_unsafe_code,
         get_python_lib_zip,
-        DEBUG,                                          # pylint: disable=invalid-name
+        DEBUG,
         filestore,
         i18n,
         node_path,
         render_template,
         seed,      # Why do we do this if we have self.seed?
-        STATIC_URL,                                     # pylint: disable=invalid-name
+        STATIC_URL,
         xqueue,
         matlab_api_key=None
     ):
@@ -560,9 +560,23 @@ class LoncapaProblem(object):
         Returns:
             a string with the question text
         """
+
+        def generate_default_question_label():
+            """
+            To create question string like "Question 2" by adding "Question" and its position number.
+            For instance 'd2e35c1d294b4ba0b3b1048615605d2a_2_1' contains 2,
+            which is used in question number 1 (see example XML in comment above)
+            There's no question 0 (question IDs start at 1, answer IDs at 2)
+            """
+            question_nr = int(answer_id.split('_')[-2]) - 1
+            return _("Question {}").format(question_nr)
+
         _ = get_gettext(self.capa_system.i18n)
         # Some questions define a prompt with this format:   >>This is a prompt<<
-        prompt = self.problem_data[answer_id].get('label')
+        try:
+            prompt = self.problem_data[answer_id].get('label')
+        except KeyError:
+            prompt = None
 
         if prompt:
             question_text = prompt.striptags()
@@ -578,7 +592,9 @@ class LoncapaProblem(object):
             #
             # Starting from  answer (the optioninput in this example) we go up and backwards
             xml_elems = self.tree.xpath('//*[@id="' + answer_id + '"]')
-            assert len(xml_elems) == 1
+            if len(xml_elems) != 1:
+                return generate_default_question_label()
+
             xml_elem = xml_elems[0].getparent()
 
             # Get the element that probably contains the question text
@@ -601,11 +617,7 @@ class LoncapaProblem(object):
             if questiontext_elem is not None and questiontext_elem.tag in LABEL_ELEMS:
                 question_text = questiontext_elem.text
             else:
-                # For instance 'd2e35c1d294b4ba0b3b1048615605d2a_2_1' contains 2,
-                # which is used in question number 1 (see example XML in comment above)
-                # There's no question 0 (question IDs start at 1, answer IDs at 2)
-                question_nr = int(answer_id.split('_')[-2]) - 1
-                question_text = _("Question {0}").format(question_nr)
+                question_text = generate_default_question_label()
 
         return question_text
 

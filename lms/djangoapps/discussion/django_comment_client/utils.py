@@ -13,8 +13,7 @@ from django.db import connection
 from django.http import HttpResponse
 from django.urls import reverse
 from django.utils.deprecation import MiddlewareMixin
-from opaque_keys.edx.keys import CourseKey, UsageKey
-from opaque_keys.edx.locations import i4xEncoder
+from opaque_keys.edx.keys import CourseKey, i4xEncoder, UsageKey
 from pytz import UTC
 from six import text_type
 from six.moves import map
@@ -692,10 +691,9 @@ def permalink(content):
     else:
         course_id = content['course_id']
     if content['type'] == 'thread':
-        return reverse('discussion.views.single_thread',
-                       args=[course_id, content['commentable_id'], content['id']])
+        return reverse('single_thread', args=[course_id, content['commentable_id'], content['id']])
     else:
-        return reverse('discussion.views.single_thread',
+        return reverse('single_thread',
                        args=[course_id, content['commentable_id'], content['thread_id']]) + '#' + content['id']
 
 

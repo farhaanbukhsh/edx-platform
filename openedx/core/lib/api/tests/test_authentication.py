@@ -24,11 +24,9 @@ from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.test import APIClient, APIRequestFactory
 from rest_framework.views import APIView
-import provider as oauth2_provider
 
 from openedx.core.djangoapps.oauth_dispatch import adapters
 from openedx.core.lib.api import authentication
-from provider import constants, scope
 
 factory = APIRequestFactory()  # pylint: disable=invalid-name
 
@@ -47,7 +45,6 @@ class MockView(APIView):  # pylint: disable=missing-docstring
 
 
 urlpatterns = [
-    url(r'^oauth2/', include(('provider.oauth2.urls', 'oauth2'), namespace='oauth2')),
     url(
         r'^oauth2-inactive-test/$',
         MockView.as_view(authentication_classes=[authentication.BearerAuthenticationAllowInactiveUser])
@@ -68,36 +65,12 @@ class OAuth2AllowInActiveUsersTests(TestCase):
 
     def setUp(self):
         super(OAuth2AllowInActiveUsersTests, self).setUp()
-        self.dop_adapter = adapters.DOPAdapter()
         self.dot_adapter = adapters.DOTAdapter()
         self.csrf_client = APIClient(enforce_csrf_checks=True)
         self.username = 'john'
         self.email = 'lennon@thebeatles.com'
         self.password = 'password'
         self.user = User.objects.create_user(self.username, self.email, self.password)
-
-        self.CLIENT_ID = 'client_key'  # pylint: disable=invalid-name
-        self.CLIENT_SECRET = 'client_secret'  # pylint: disable=invalid-name
-        self.ACCESS_TOKEN = 'access_token'  # pylint: disable=invalid-name
-        self.REFRESH_TOKEN = 'refresh_token'  # pylint: disable=invalid-name
-
-        self.dop_oauth2_client = self.dop_adapter.create_public_client(
-            name='example',
-            user=self.user,
-            client_id=self.CLIENT_ID,
-            redirect_uri='https://example.edx/redirect',
-        )
-
-        self.access_token = oauth2_provider.oauth2.models.AccessToken.objects.create(
-            token=self.ACCESS_TOKEN,
-            client=self.dop_oauth2_client,
-            user=self.user,
-        )
-        self.refresh_token = oauth2_provider.oauth2.models.RefreshToken.objects.create(
-            user=self.user,
-            access_token=self.access_token,
-            client=self.dop_oauth2_client,
-        )
 
         self.dot_oauth2_client = self.dot_adapter.create_public_client(
             name='example',
@@ -111,19 +84,21 @@ class OAuth2AllowInActiveUsersTests(TestCase):
             application=self.dot_oauth2_client,
             expires=now() + timedelta(days=30),
         )
+        self.dot_refresh_token = dot_models.RefreshToken.objects.create(
+            user=self.user,
+            token='dot-refresh-token',
+            application=self.dot_oauth2_client,
+        )
 
         # This is the a change we've made from the django-rest-framework-oauth version
         # of these tests.
         self.user.is_active = False
         self.user.save()
 
-        # This is the a change we've made from the django-rest-framework-oauth version
-        # of these tests.
-        # Override the SCOPE_NAME_DICT setting for tests for oauth2-with-scope-test.  This is
-        # needed to support READ and WRITE scopes as they currently aren't supported by the
-        # edx-auth2-provider, and their scope values collide with other scopes defined in the
-        # edx-auth2-provider.
-        scope.SCOPE_NAME_DICT = {'read': constants.READ, 'write': constants.WRITE}
+    def _create_authorization_header(self, token=None):
+        if token is None:
+            token = self.dot_access_token.token
+        return "Bearer {0}".format(token)
 
     def get_with_bearer_token(self, target_url, params=None, token=None):
         """
@@ -151,13 +126,7 @@ class OAuth2AllowInActiveUsersTests(TestCase):
         self.assertEqual(response.status_code, status_code)
         self.assertEqual(response_dict['error_code'], error_code)
 
-    def _create_authorization_header(self, token=None):
-        if token is None:
-            token = self.access_token.token
-        return "Bearer {0}".format(token)
-
     @ddt.data(None, {})
-    @unittest.skipUnless(oauth2_provider, 'django-oauth2-provider not installed')
     def test_get_form_with_wrong_authorization_header_token_type_failing(self, params):
         """Ensure that a wrong token type lead to the correct HTTP error status code"""
         response = self.csrf_client.get(
@@ -173,18 +142,13 @@ class OAuth2AllowInActiveUsersTests(TestCase):
         # provided (yet).
         self.assertNotIn('error_code', json.loads(response.content.decode('utf-8')))
 
-    def test_get_form_passing_auth(self):
-        """Ensure GETing form over OAuth with correct client credentials succeed"""
-        response = self.get_with_bearer_token(self.OAUTH2_BASE_TESTING_URL)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-
     def test_get_form_passing_auth_with_dot(self):
         response = self.get_with_bearer_token(self.OAUTH2_BASE_TESTING_URL, token=self.dot_access_token.token)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_get_form_failing_auth_url_transport(self):
         """Ensure GETing form over OAuth with correct client credentials in query fails when DEBUG is False"""
-        query = urlencode({'access_token': self.access_token.token})
+        query = urlencode({'access_token': self.dot_access_token.token})
         response = self.csrf_client.get(self.OAUTH2_BASE_TESTING_URL + '?%s' % query)
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
@@ -198,7 +162,7 @@ class OAuth2AllowInActiveUsersTests(TestCase):
 
     def test_post_form_token_removed_failing_auth(self):
         """Ensure POSTing when there is no OAuth access token in db fails"""
-        self.access_token.delete()
+        self.dot_access_token.delete()
         response = self.post_with_bearer_token(self.OAUTH2_BASE_TESTING_URL)
         self.check_error_codes(
             response,
@@ -208,7 +172,7 @@ class OAuth2AllowInActiveUsersTests(TestCase):
 
     def test_post_form_with_refresh_token_failing_auth(self):
         """Ensure POSTing with refresh token instead of access token fails"""
-        response = self.post_with_bearer_token(self.OAUTH2_BASE_TESTING_URL, token=self.refresh_token.token)
+        response = self.post_with_bearer_token(self.OAUTH2_BASE_TESTING_URL, token=self.dot_refresh_token.token)
         self.check_error_codes(
             response,
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -217,8 +181,8 @@ class OAuth2AllowInActiveUsersTests(TestCase):
 
     def test_post_form_with_expired_access_token_failing_auth(self):
         """Ensure POSTing with expired access token fails with a 'token_expired' error"""
-        self.access_token.expires = now() - timedelta(seconds=10)  # 10 seconds late
-        self.access_token.save()
+        self.dot_access_token.expires = now() - timedelta(seconds=10)  # 10 seconds late
+        self.dot_access_token.save()
         response = self.post_with_bearer_token(self.OAUTH2_BASE_TESTING_URL)
         self.check_error_codes(
             response,

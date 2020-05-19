@@ -395,7 +395,7 @@ class CourseListSearchViewTest(CourseApiTestViewMixin, ModuleStoreTestCase, Sear
         self.setup_user(self.audit_user)
 
         # These query counts were found empirically
-        query_counts = [63, 45, 45, 45, 45, 45, 45, 45, 45, 45, 15]
+        query_counts = [62, 45, 45, 45, 45, 45, 45, 45, 45, 45, 15]
         ordered_course_ids = sorted([str(cid) for cid in (course_ids + [c.id for c in self.courses])])
 
         self.clear_caches()
@@ -527,3 +527,24 @@ class LazyPageNumberPaginationTestCase(TestCase):
         paginated_queryset = pagination.paginate_queryset(even_numbers_lazy_sequence, request)
         paginated_response = pagination.get_paginated_response(paginated_queryset)
         self.assertDictEqual(expected_response, paginated_response.data)
+
+    def test_not_found_error_for_invalid_page(self):
+        number_sequence = range(20)
+        even_numbers_lazy_sequence = LazySequence(
+            (
+                number for number in number_sequence
+                if (number % 2) == 0
+            ),
+            est_len=len(number_sequence)
+        )
+
+        request = RequestFactory().get('/endpoint', data={'page': 3, 'page_size': 5})
+        request.query_params = {'page': 3, 'page_size': 5}
+
+        with self.assertRaises(Exception) as exc:
+            pagination = LazyPageNumberPagination()
+            pagination.max_page_size = 5
+            pagination.page_size = 5
+            paginated_queryset = pagination.paginate_queryset(even_numbers_lazy_sequence, request)
+            pagination.get_paginated_response(paginated_queryset)
+            self.assertIn('Invalid page', exc.exception)

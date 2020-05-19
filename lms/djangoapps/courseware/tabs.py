@@ -12,19 +12,10 @@ from django.utils.translation import ugettext_noop
 from lms.djangoapps.courseware.access import has_access
 from lms.djangoapps.courseware.entrance_exams import user_can_skip_entrance_exam
 from openedx.core.djangoapps.content.course_overviews.models import CourseOverview
-from openedx.core.djangoapps.waffle_utils import CourseWaffleFlag, WaffleFlagNamespace
 from openedx.core.lib.course_tabs import CourseTabPluginManager
-from openedx.features.course_experience import UNIFIED_COURSE_TAB_FLAG, default_course_url_name
+from openedx.features.course_experience import RELATIVE_DATES_FLAG, UNIFIED_COURSE_TAB_FLAG, default_course_url_name
 from student.models import CourseEnrollment
 from xmodule.tabs import CourseTab, CourseTabList, course_reverse_func_from_name_func, key_checker
-
-COURSEWARE_TABS_NAMESPACE = WaffleFlagNamespace(name=u'courseware_tabs')
-
-ENABLE_DATES_TAB = CourseWaffleFlag(
-    waffle_namespace=COURSEWARE_TABS_NAMESPACE,
-    flag_name="enable_dates_tab",
-    flag_undefined_default=False
-)
 
 
 class EnrolledTab(CourseTab):
@@ -330,10 +321,7 @@ class DatesTab(CourseTab):
     @classmethod
     def is_enabled(cls, course, user=None):
         """Returns true if this tab is enabled."""
-        # We want to only limit this feature to instructor led courses for now
-        if ENABLE_DATES_TAB.is_enabled(course.id):
-            return not CourseOverview.get_from_id(course.id).self_paced
-        return False
+        return RELATIVE_DATES_FLAG.is_enabled(course.id)
 
 
 def get_course_tab_list(user, course):
@@ -359,6 +347,12 @@ def get_course_tab_list(user, course):
             continue
         if tab.type == 'static_tab' and tab.course_staff_only and \
                 not bool(user and has_access(user, 'staff', course, course.id)):
+            continue
+        # We had initially created a CourseTab.load() for dates that ended up
+        # persisting the dates tab tomodulestore on Course Run creation, but
+        # ignoring any static dates tab here we can fix forward without
+        # allowing the bug to continue to surface
+        if tab.type == 'dates':
             continue
         course_tab_list.append(tab)
 
