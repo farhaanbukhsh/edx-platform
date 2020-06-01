@@ -34,8 +34,6 @@ define([
                 collapsedClass: 'is-collapsed'
             },
 
-            outlineViewClass: CourseOutlineView,
-
             initialize: function() {
                 var self = this;
                 this.initialState = this.options.initialState;
@@ -92,7 +90,7 @@ define([
                     this.highlightsEnableView.render();
                 }
 
-                this.outlineView = new this.outlineViewClass({
+                this.outlineView = new CourseOutlineView({
                     el: this.$('.outline'),
                     model: this.model,
                     isRoot: true,
