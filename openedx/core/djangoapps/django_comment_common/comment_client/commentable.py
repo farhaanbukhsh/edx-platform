@@ -2,7 +2,7 @@
 """Provides base Commentable model class"""
 
 
-from openedx.core.djangoapps.django_comment_common.comment_client import models, settings
+from . import models, settings
 
 
 class Commentable(models.Model):
