@@ -19,7 +19,7 @@ from eventtracking import tracker
 from opaque_keys.edx.keys import CourseKey
 from six.moves.urllib.parse import urljoin
 
-import openedx.core.djangoapps.django_comment_common.comment_client as cc
+import openedx.core.djangoapps.edx_discussions.comment_client as cc
 from lms.djangoapps.discussion.django_comment_client.utils import (
     get_accessible_discussion_xblocks_by_course_id,
     permalink

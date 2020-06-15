@@ -22,7 +22,7 @@ setup(
             "courseware = lms.djangoapps.courseware.tabs:CoursewareTab",
             "course_info = lms.djangoapps.courseware.tabs:CourseInfoTab",
             "dates = lms.djangoapps.courseware.tabs:DatesTab",
-            "discussion = lms.djangoapps.discussion.plugins:DiscussionTab",
+            "discussion = openedx.core.djangoapps.edx_discussions.plugins:DiscussionTab",
             "edxnotes = lms.djangoapps.edxnotes.plugins:EdxNotesTab",
             "external_discussion = lms.djangoapps.courseware.tabs:ExternalDiscussionCourseTab",
             "external_link = lms.djangoapps.courseware.tabs:ExternalLinkCourseTab",
@@ -75,7 +75,7 @@ setup(
             "ace_common = openedx.core.djangoapps.ace_common.apps:AceCommonConfig",
             "credentials = openedx.core.djangoapps.credentials.apps:CredentialsConfig",
             "content_libraries = openedx.core.djangoapps.content_libraries.apps:ContentLibrariesConfig",
-            "discussion = lms.djangoapps.discussion.apps:DiscussionConfig",
+            "discussion = openedx.core.djangoapps.edx_discussions.apps:DiscussionConfig",
             "grades = lms.djangoapps.grades.apps:GradesConfig",
             "plugins = openedx.core.djangoapps.plugins.apps:PluginsConfig",
             "theming = openedx.core.djangoapps.theming.apps:ThemingConfig",
@@ -96,7 +96,7 @@ setup(
             # placement in LMS is a historical artifact. The eventual goal is to
             # consolidate the multiple discussions-related Django apps and
             # either put them in the openedx/ dir, or in another repo entirely.
-            "discussion = lms.djangoapps.discussion.apps:DiscussionConfig",
+            "discussion = openedx.core.edxapps.edx_discussions.apps:DiscussionConfig",
             "olx_rest_api = openedx.core.djangoapps.olx_rest_api.apps:OlxRestApiAppConfig",
             "plugins = openedx.core.djangoapps.plugins.apps:PluginsConfig",
             "theming = openedx.core.djangoapps.theming.apps:ThemingConfig",

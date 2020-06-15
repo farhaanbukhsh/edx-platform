@@ -26,8 +26,8 @@ from lms.djangoapps.discussion.django_comment_client.tests.utils import (
     config_course_discussions,
     topic_name_to_id
 )
-from lms.djangoapps.discussion.rest_api import api
-from lms.djangoapps.discussion.rest_api.tests.utils import (
+from openedx.core.djangoapps.edx_discussions.rest_api import api
+from openedx.core.djangoapps.edx_discussions.rest_api.tests.utils import (
     CommentsServiceMockMixin,
     ProfileImageTestMixin,
     make_minimal_cs_comment,

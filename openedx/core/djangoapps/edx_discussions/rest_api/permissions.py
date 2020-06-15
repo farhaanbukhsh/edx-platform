@@ -3,8 +3,7 @@ Discussion API permission logic
 """
 
 
-from openedx.core.djangoapps.django_comment_common.comment_client.comment import Comment
-from openedx.core.djangoapps.django_comment_common.comment_client.thread import Thread
+from ..comment_client import Comment, Thread
 
 
 def _is_author(cc_content, context):

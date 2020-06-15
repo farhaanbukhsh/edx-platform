@@ -5,7 +5,6 @@ Discussion API views
 
 import logging
 
-from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from edx_rest_framework_extensions.auth.jwt.authentication import JwtAuthentication
@@ -19,10 +18,10 @@ from rest_framework.views import APIView
 from rest_framework.viewsets import ViewSet
 from six import text_type
 
-from discussion.views import get_divided_discussions
+
 from lms.djangoapps.instructor.access import update_forum_role
 from lms.djangoapps.discussion.django_comment_client.utils import available_division_schemes
-from lms.djangoapps.discussion.rest_api.api import (
+from .api import (
     create_comment,
     create_thread,
     delete_comment,
@@ -36,19 +35,20 @@ from lms.djangoapps.discussion.rest_api.api import (
     update_comment,
     update_thread
 )
-from lms.djangoapps.discussion.rest_api.forms import (
+from .forms import (
     CommentGetForm,
     CommentListGetForm,
     CourseDiscussionRolesForm,
     CourseDiscussionSettingsForm,
     ThreadListGetForm
 )
-from lms.djangoapps.discussion.rest_api.serializers import (
+from .serializers import (
     DiscussionRolesListSerializer,
     DiscussionRolesSerializer,
     DiscussionSettingsSerializer
 )
-from openedx.core.djangoapps.django_comment_common import comment_client
+from openedx.core.djangoapps.edx_discussions import comment_client
+from openedx.core.djangoapps.edx_discussions.views import get_divided_discussions
 from openedx.core.djangoapps.django_comment_common.models import Role
 from openedx.core.djangoapps.django_comment_common.utils import (
     get_course_discussion_settings,

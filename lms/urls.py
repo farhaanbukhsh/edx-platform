@@ -25,7 +25,7 @@ from lms.djangoapps.courseware.module_render import (
 from lms.djangoapps.courseware.views import views as courseware_views
 from lms.djangoapps.courseware.views.index import CoursewareIndex
 from lms.djangoapps.courseware.views.views import CourseTabView, EnrollStaffView, StaticCourseTabView
-from lms.djangoapps.discussion import views as discussion_views
+from openedx.core.djangoapps.edx_discussions import views as discussion_views
 from lms.djangoapps.discussion.notification_prefs import views as notification_prefs_views
 from lms.djangoapps.instructor.views import coupons as instructor_coupons_views
 from lms.djangoapps.instructor.views import instructor_dashboard as instructor_dashboard_views
@@ -741,7 +741,7 @@ if settings.FEATURES.get('ENABLE_DISCUSSION_SERVICE'):
     urlpatterns += [
         url(
             r'^api/discussion/',
-            include('discussion.rest_api.urls')
+            include('openedx.core.djangoapps.edx_discussions.rest_api.urls')
         ),
         url(
             r'^courses/{}/discussion/'.format(

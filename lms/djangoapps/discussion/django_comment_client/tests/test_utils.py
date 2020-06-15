@@ -29,7 +29,7 @@ from lms.djangoapps.teams.tests.factories import CourseTeamFactory
 from openedx.core.djangoapps.course_groups import cohorts
 from openedx.core.djangoapps.course_groups.cohorts import set_course_cohorted
 from openedx.core.djangoapps.course_groups.tests.helpers import CohortFactory, config_course_cohorts
-from openedx.core.djangoapps.django_comment_common.comment_client.utils import (
+from openedx.core.djangoapps.edx_discussions.comment_client.utils import (
     CommentClientMaintenanceError,
     perform_request
 )

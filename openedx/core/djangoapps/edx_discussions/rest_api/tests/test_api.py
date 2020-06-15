@@ -21,8 +21,8 @@ from six.moves.urllib.parse import parse_qs, urlencode, urlparse, urlunparse
 from common.test.utils import MockSignalHandlerMixin, disable_signal
 from lms.djangoapps.courseware.tests.factories import BetaTesterFactory, StaffFactory
 from lms.djangoapps.discussion.django_comment_client.tests.utils import ForumsEnableMixin
-from lms.djangoapps.discussion.rest_api import api
-from lms.djangoapps.discussion.rest_api.api import (
+from openedx.core.djangoapps.edx_discussions.rest_api import api
+from openedx.core.djangoapps.edx_discussions.rest_api import (
     create_comment,
     create_thread,
     delete_comment,
@@ -35,12 +35,12 @@ from lms.djangoapps.discussion.rest_api.api import (
     update_comment,
     update_thread
 )
-from lms.djangoapps.discussion.rest_api.exceptions import (
+from openedx.core.djangoapps.edx_discussions.rest_api.exceptions import (
     CommentNotFoundError,
     DiscussionDisabledError,
     ThreadNotFoundError
 )
-from lms.djangoapps.discussion.rest_api.tests.utils import (
+from openedx.core.djangoapps.edx_discussions.rest_api.tests.utils import (
     CommentsServiceMockMixin,
     make_minimal_cs_comment,
     make_minimal_cs_thread,

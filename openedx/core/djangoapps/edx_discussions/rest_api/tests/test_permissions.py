@@ -7,15 +7,15 @@ import itertools
 
 import ddt
 
-from lms.djangoapps.discussion.rest_api.permissions import (
+from openedx.core.djangoapps.edx_discussions.rest_api.permissions import (
     can_delete,
     get_editable_fields,
     get_initializable_comment_fields,
     get_initializable_thread_fields
 )
-from openedx.core.djangoapps.django_comment_common.comment_client.comment import Comment
-from openedx.core.djangoapps.django_comment_common.comment_client.thread import Thread
-from openedx.core.djangoapps.django_comment_common.comment_client.user import User
+from openedx.core.djangoapps.edx_discussions.comment_client.comment import Comment
+from openedx.core.djangoapps.edx_discussions.comment_client.thread import Thread
+from openedx.core.djangoapps.edx_discussions.comment_client.user import User
 from xmodule.modulestore.tests.django_utils import ModuleStoreTestCase
 from xmodule.modulestore.tests.factories import CourseFactory
 

@@ -28,28 +28,28 @@ from lms.djangoapps.discussion.django_comment_client.utils import (
     get_group_id_for_user,
     is_commentable_divided
 )
-from lms.djangoapps.discussion.rest_api.exceptions import (
+from .exceptions import (
     CommentNotFoundError,
     DiscussionDisabledError,
     ThreadNotFoundError
 )
-from lms.djangoapps.discussion.rest_api.forms import CommentActionsForm, ThreadActionsForm
-from lms.djangoapps.discussion.rest_api.pagination import DiscussionAPIPagination
-from lms.djangoapps.discussion.rest_api.permissions import (
+from .forms import CommentActionsForm, ThreadActionsForm
+from .pagination import DiscussionAPIPagination
+from .permissions import (
     can_delete,
     get_editable_fields,
     get_initializable_comment_fields,
     get_initializable_thread_fields
 )
-from lms.djangoapps.discussion.rest_api.serializers import (
+from .serializers import (
     CommentSerializer,
     DiscussionTopicSerializer,
     ThreadSerializer,
     get_context
 )
-from openedx.core.djangoapps.django_comment_common.comment_client.comment import Comment
-from openedx.core.djangoapps.django_comment_common.comment_client.thread import Thread
-from openedx.core.djangoapps.django_comment_common.comment_client.utils import CommentClientRequestError
+from ..comment_client.comment import Comment
+from ..comment_client.thread import Thread
+from ..comment_client.utils import CommentClientRequestError
 from openedx.core.djangoapps.django_comment_common.signals import (
     comment_created,
     comment_deleted,
@@ -62,7 +62,6 @@ from openedx.core.djangoapps.django_comment_common.signals import (
 )
 from openedx.core.djangoapps.django_comment_common.utils import get_course_discussion_settings
 from openedx.core.djangoapps.user_api.accounts.api import get_account_settings
-from openedx.core.djangoapps.user_api.accounts.views import AccountViewSet
 from openedx.core.lib.exceptions import CourseNotFoundError, DiscussionNotFoundError, PageNotFoundError
 
 

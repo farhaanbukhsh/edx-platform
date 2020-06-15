@@ -135,7 +135,7 @@ build
 /src/
 \#*\#
 .env/
-openedx/core/djangoapps/django_comment_common/comment_client/python
+openedx/core/djangoapps/edx_discussions/comment_client/python
 autodeploy.properties
 .ws_migrations_complete
 dist

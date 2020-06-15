@@ -13,7 +13,6 @@ file and check it in at the same time as your model changes. To do that,
 
 
 import hashlib
-import inspect
 import json
 import logging
 import uuid
@@ -56,7 +55,7 @@ from six.moves.urllib.parse import urlencode
 from slumber.exceptions import HttpClientError, HttpServerError
 from user_util import user_util
 
-import openedx.core.djangoapps.django_comment_common.comment_client as cc
+import openedx.core.djangoapps.edx_discussions.comment_client as cc
 from course_modes.models import CourseMode, get_cosmetic_verified_display_price
 from lms.djangoapps.certificates.models import GeneratedCertificate
 from lms.djangoapps.courseware.models import (

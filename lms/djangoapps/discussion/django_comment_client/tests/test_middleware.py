@@ -5,7 +5,7 @@ from django.test import TestCase
 from six import text_type
 
 import lms.djangoapps.discussion.django_comment_client.middleware as middleware
-import openedx.core.djangoapps.django_comment_common.comment_client as comment_client
+import openedx.core.djangoapps.edx_discussions.comment_client as comment_client
 
 
 class AjaxExceptionTestCase(TestCase):

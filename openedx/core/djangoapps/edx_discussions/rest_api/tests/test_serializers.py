@@ -13,15 +13,15 @@ from django.test.client import RequestFactory
 from six.moves.urllib.parse import urlparse
 
 from lms.djangoapps.discussion.django_comment_client.tests.utils import ForumsEnableMixin
-from lms.djangoapps.discussion.rest_api.serializers import CommentSerializer, ThreadSerializer, get_context
-from lms.djangoapps.discussion.rest_api.tests.utils import (
+from openedx.core.djangoapps.edx_discussions.rest_api import CommentSerializer, ThreadSerializer, get_context
+from openedx.core.djangoapps.edx_discussions.rest_api.tests.utils import (
     CommentsServiceMockMixin,
     make_minimal_cs_comment,
     make_minimal_cs_thread
 )
 from openedx.core.djangoapps.course_groups.tests.helpers import CohortFactory
-from openedx.core.djangoapps.django_comment_common.comment_client.comment import Comment
-from openedx.core.djangoapps.django_comment_common.comment_client.thread import Thread
+from openedx.core.djangoapps.edx_discussions.comment_client.comment import Comment
+from openedx.core.djangoapps.edx_discussions.comment_client.thread import Thread
 from openedx.core.djangoapps.django_comment_common.models import (
     FORUM_ROLE_ADMINISTRATOR,
     FORUM_ROLE_COMMUNITY_TA,

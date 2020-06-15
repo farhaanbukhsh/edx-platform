@@ -10,7 +10,7 @@ from edx_django_utils.cache import DEFAULT_REQUEST_CACHE
 from opaque_keys.edx.keys import CourseKey
 
 from lms.djangoapps.teams.models import CourseTeam
-from openedx.core.djangoapps.django_comment_common.comment_client import Thread
+from openedx.core.djangoapps.edx_discussions.comment_client import Thread
 from openedx.core.djangoapps.django_comment_common.models import (
     CourseDiscussionSettings,
     all_permissions_for_user_in_course

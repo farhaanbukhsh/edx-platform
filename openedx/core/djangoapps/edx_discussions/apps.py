@@ -16,7 +16,7 @@ class DiscussionConfig(AppConfig):
     Application Configuration for Discussion.
     """
 
-    name = u'lms.djangoapps.discussion'
+    name = u'openedx.core.djangoapps.edx_discussions'
     plugin_app = {
         PluginURLs.CONFIG: {
             ProjectType.LMS: {

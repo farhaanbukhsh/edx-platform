@@ -8,7 +8,7 @@ from django.conf import settings
 from django.conf.urls import include, url
 from rest_framework.routers import SimpleRouter
 
-from lms.djangoapps.discussion.rest_api.views import (
+from .views import (
     CommentViewSet,
     CourseDiscussionRolesAPIView,
     CourseDiscussionSettingsAPIView,

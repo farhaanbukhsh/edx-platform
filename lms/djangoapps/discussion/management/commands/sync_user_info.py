@@ -7,7 +7,7 @@ discussion service (later info will be synced automatically)
 from django.contrib.auth.models import User
 from django.core.management.base import BaseCommand
 
-import openedx.core.djangoapps.django_comment_common.comment_client as cc
+import openedx.core.djangoapps.edx_discussions.comment_client as cc
 
 
 class Command(BaseCommand):

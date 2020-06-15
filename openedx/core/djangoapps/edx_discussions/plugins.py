@@ -8,7 +8,7 @@ from django.utils.translation import ugettext_noop
 
 import lms.djangoapps.discussion.django_comment_client.utils as utils
 from lms.djangoapps.courseware.tabs import EnrolledTab
-from lms.djangoapps.discussion.config.waffle import use_bootstrap_flag_enabled
+from openedx.core.djangoapps.edx_discussions.config.waffle import use_bootstrap_flag_enabled
 from xmodule.tabs import TabFragmentViewMixin
 
 
@@ -21,7 +21,7 @@ class DiscussionTab(TabFragmentViewMixin, EnrolledTab):
     title = ugettext_noop('Discussion')
     priority = None
     view_name = 'forum_form_discussion'
-    fragment_view_name = 'discussion.views.DiscussionBoardFragmentView'
+    fragment_view_name = 'openedx.core.djangoapps.edx_discussions.views.DiscussionBoardFragmentView'
     is_hideable = settings.FEATURES.get('ALLOW_HIDING_DISCUSSION_TAB', False)
     is_default = False
     body_class = 'discussion'

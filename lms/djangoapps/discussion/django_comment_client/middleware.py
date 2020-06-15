@@ -5,7 +5,7 @@ from django.utils.deprecation import MiddlewareMixin
 from six import text_type
 
 from lms.djangoapps.discussion.django_comment_client.utils import JsonError
-from openedx.core.djangoapps.django_comment_common.comment_client import CommentClientRequestError
+from openedx.core.djangoapps.edx_discussions.comment_client import CommentClientRequestError
 
 log = logging.getLogger(__name__)
 
