@@ -22,8 +22,8 @@ from .api import get_blocks
 from .forms import BlockListGetForm
 
 
-@view_auth_classes()
 @method_decorator(transaction.non_atomic_requests, name='dispatch')
+@view_auth_classes(is_authenticated=False)
 class BlocksView(DeveloperErrorViewMixin, ListAPIView):
     """
     **Use Case**
@@ -230,7 +230,7 @@ class BlocksView(DeveloperErrorViewMixin, ListAPIView):
             raise Http404(u"Block not found: {}".format(text_type(exception)))
 
 
-@view_auth_classes()
+@view_auth_classes(is_authenticated=False)
 class BlocksInCourseView(BlocksView):
     """
     **Use Case**

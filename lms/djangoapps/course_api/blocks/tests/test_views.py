@@ -4,6 +4,8 @@ Tests for Blocks Views
 
 
 from datetime import datetime
+from unittest import mock
+from unittest.mock import Mock
 
 import six
 from six.moves.urllib.parse import urlencode, urlunparse
@@ -148,13 +150,72 @@ class TestBlocksView(SharedModuleStoreTestCase):
         else:
             self.assertFalse(expression)
 
-    def test_not_authenticated(self):
+    def test_not_authenticated_non_public_course_with_other_username(self):
+        """
+        Verify behaviour when accessing course blocks of a non-public course for another user anonymously.
+        """
         self.client.logout()
-        self.verify_response(401)
+        self.verify_response(403)
 
-    def test_not_enrolled(self):
+    def test_not_authenticated_non_public_course_with_all_blocks(self):
+        """
+        Verify behaviour when accessing all course blocks of a non-public course anonymously.
+        """
+        self.client.logout()
+        self.query_params.pop('username')
+        self.query_params['all_blocks'] = True
+        self.verify_response(403)
+
+    def test_not_authenticated_non_public_course_with_blank_username(self):
+        """
+        Verify behaviour when accessing course blocks of a non-public course for anonymous user anonymously.
+        """
+        self.client.logout()
+        self.query_params['username'] = ''
+        self.verify_response(403)
+
+    @mock.patch("course_api.blocks.forms.is_course_public", Mock(return_value=True))
+    def test_not_authenticated_public_course_with_other_username(self):
+        """
+        Verify behaviour when accessing course blocks of a public course for another user anonymously.
+        """
+        self.client.logout()
+        self.verify_response(403)
+
+    @mock.patch("course_api.blocks.forms.is_course_public", Mock(return_value=True))
+    def test_not_authenticated_public_course_with_all_blocks(self):
+        """
+        Verify behaviour when accessing all course blocks of a public course anonymously.
+        """
+        self.client.logout()
+        self.query_params.pop('username')
+        self.query_params['all_blocks'] = True
+        self.verify_response(403)
+
+    @mock.patch("course_api.blocks.forms.is_course_public", Mock(return_value=True))
+    def test_not_authenticated_public_course_with_blank_username(self):
+        """
+        Verify behaviour when accessing course blocks of a public course for anonymous user anonymously.
+        """
+        self.client.logout()
+        self.query_params['username'] = ''
+        self.verify_response()
+
+    def test_not_enrolled_non_public_course(self):
+        """
+        Verify behaviour when accessing course blocks for a non-public course as a user not enrolled in course.
+        """
         CourseEnrollment.unenroll(self.user, self.course_key)
         self.verify_response(403)
+
+    @mock.patch("course_api.blocks.forms.is_course_public", Mock(return_value=True))
+    def test_not_enrolled_public_course(self):
+        """
+        Verify behaviour when accessing course blocks for a public course as a user not enrolled in course.
+        """
+        self.query_params['username'] = ''
+        CourseEnrollment.unenroll(self.user, self.course_key)
+        self.verify_response()
 
     def test_non_existent_course(self):
         usage_key = self.store.make_course_usage_key(CourseLocator('non', 'existent', 'course'))
