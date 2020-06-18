@@ -81,17 +81,17 @@ class UserPartitionTransformer(FilteringTransformerMixin, BlockStructureTransfor
     def transform_block_filters(self, usage_info, block_structure):
         user = usage_info.user
         result_list = SplitTestTransformer().transform_block_filters(usage_info, block_structure)
-        staff_access = has_access(user, 'staff', usage_info.course_key)
+        staff_access = pp(has_access(user, 'staff', usage_info.course_key))
 
         # If you have staff access, you are allowed access to the entire result list
-        if staff_access:
+        if pp(staff_access):
             return result_list
 
         user_partitions = block_structure.get_transformer_data(self, 'user_partitions')
         if not user_partitions:
             return [block_structure.create_universal_filter()]
 
-        user_groups = get_user_partition_groups(usage_info.course_key, user_partitions, user, 'id')
+        user_groups = pp(get_user_partition_groups(usage_info.course_key, user_partitions, user, 'id'))
 
         for block_key in block_structure.topological_traversal():
             transformer_block_field = block_structure.get_transformer_block_field(

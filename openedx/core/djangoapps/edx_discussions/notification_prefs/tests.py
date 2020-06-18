@@ -13,14 +13,14 @@ from django.test.utils import override_settings
 from django.urls import reverse
 from mock import patch
 
-from lms.djangoapps.discussion.notification_prefs import NOTIFICATION_PREF_KEY
-from lms.djangoapps.discussion.notification_prefs.views import (
-    UsernameCipher,
+from openedx.core.djangoapps.edx_discussions.notification_prefs import NOTIFICATION_PREF_KEY
+from openedx.core.djangoapps.edx_discussions.notification_prefs import (
     ajax_disable,
     ajax_enable,
     ajax_status,
     set_subscription
 )
+from openedx.core.lib.user_utils import UsernameCipher
 from openedx.core.djangoapps.user_api.models import UserPreference
 from student.tests.factories import UserFactory
 from util.testing import UrlResetMixin

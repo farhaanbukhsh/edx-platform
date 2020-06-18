@@ -26,7 +26,7 @@ from lms.djangoapps.courseware.views import views as courseware_views
 from lms.djangoapps.courseware.views.index import CoursewareIndex
 from lms.djangoapps.courseware.views.views import CourseTabView, EnrollStaffView, StaticCourseTabView
 from openedx.core.djangoapps.edx_discussions import views as discussion_views
-from lms.djangoapps.discussion.notification_prefs import views as notification_prefs_views
+from openedx.core.djangoapps.edx_discussions.notification_prefs import views as notification_prefs_views
 from lms.djangoapps.instructor.views import coupons as instructor_coupons_views
 from lms.djangoapps.instructor.views import instructor_dashboard as instructor_dashboard_views
 from lms.djangoapps.instructor.views import registration_codes as instructor_registration_codes_views
@@ -109,8 +109,8 @@ urlpatterns = [
 
     url(r'^heartbeat', include('openedx.core.djangoapps.heartbeat.urls')),
 
-    url(r'^notifier_api/', include('lms.djangoapps.discussion.notifier_api.urls')),
-    url(r'^/api/notifier/', include('lms.djangoapps.discussion.notifier_api.urls')),
+    url(r'^notifier_api/', include('openedx.core.djangoapps.edx_discussions.notifier_api.urls')),
+    url(r'^/api/notifier/', include('openedx.core.djangoapps.edx_discussions.notifier_api.urls')),
 
     url(r'^i18n/', include('django.conf.urls.i18n')),
 

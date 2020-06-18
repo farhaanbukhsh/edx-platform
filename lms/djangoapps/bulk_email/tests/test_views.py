@@ -13,7 +13,7 @@ from bulk_email.models import Optout
 from bulk_email.views import opt_out_email_updates
 from six import text_type
 
-from lms.djangoapps.discussion.notification_prefs.views import UsernameCipher
+from openedx.core.lib.user_utils import UsernameCipher
 from openedx.core.lib.tests import attr
 from student.tests.factories import UserFactory
 from xmodule.modulestore.tests.factories import CourseFactory

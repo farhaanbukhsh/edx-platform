@@ -17,7 +17,7 @@ from edx_when.api import get_schedules_with_due_date
 from opaque_keys.edx.keys import CourseKey
 
 from lms.djangoapps.courseware.utils import verified_upgrade_deadline_link, can_show_verified_upgrade
-from lms.djangoapps.discussion.notification_prefs.views import UsernameCipher
+from openedx.core.lib.user_utils import UsernameCipher
 from openedx.core.djangoapps.ace_common.template_context import get_base_template_context
 from openedx.core.djangoapps.schedules.config import COURSE_UPDATE_SHOW_UNSUBSCRIBE_WAFFLE_SWITCH
 from openedx.core.djangoapps.schedules.content_highlights import get_week_highlights, get_next_section_highlights

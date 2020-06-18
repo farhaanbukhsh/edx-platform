@@ -221,12 +221,12 @@ class CoursewareInformation(RetrieveAPIView):
         if self.request.user.is_staff:
             username = self.request.GET.get('username', '') or self.request.user.username
         else:
-            username = self.request.user.username
-        overview = CoursewareMeta(
+            username = pp(self.request.user.username)
+        overview = pp(CoursewareMeta(
             CourseKey.from_string(self.kwargs['course_key_string']),
             self.request,
             username=username,
-        )
+        ))
 
         return overview
 

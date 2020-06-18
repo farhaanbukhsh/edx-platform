@@ -64,6 +64,8 @@ def get_blocks(
             blocks with start dates in the future.
     """
 
+    pp(user)
+
     if HIDE_ACCESS_DENIALS_FLAG.is_enabled():
         hide_access_denials = True
 

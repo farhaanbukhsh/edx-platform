@@ -6,7 +6,7 @@ Views handling read (GET) requests for the Discussion tab and inline discussions
 from django.conf import settings
 from django.utils.translation import ugettext_noop
 
-import lms.djangoapps.discussion.django_comment_client.utils as utils
+from lms.djangoapps.discussion.django_comment_client import utils
 from lms.djangoapps.courseware.tabs import EnrolledTab
 from openedx.core.djangoapps.edx_discussions.config.waffle import use_bootstrap_flag_enabled
 from xmodule.tabs import TabFragmentViewMixin

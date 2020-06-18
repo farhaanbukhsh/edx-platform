@@ -13,10 +13,7 @@ from django.http import Http404
 from bulk_email.models import Optout
 from lms.djangoapps.courseware.courses import get_course_by_id
 from edxmako.shortcuts import render_to_response
-from lms.djangoapps.discussion.notification_prefs.views import (
-    UsernameCipher,
-    UsernameDecryptionException,
-)
+from openedx.core.lib.user_utils import UsernameCipher, UsernameDecryptionException
 
 from opaque_keys import InvalidKeyError
 from opaque_keys.edx.keys import CourseKey

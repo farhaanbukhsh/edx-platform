@@ -8,8 +8,8 @@ from rest_framework import pagination
 from rest_framework.response import Response
 from rest_framework.viewsets import ReadOnlyModelViewSet
 
-from lms.djangoapps.discussion.notification_prefs import NOTIFICATION_PREF_KEY
-from lms.djangoapps.discussion.notifier_api.serializers import NotifierUserSerializer
+from openedx.core.djangoapps.edx_discussions.notification_prefs import NOTIFICATION_PREF_KEY
+from openedx.core.djangoapps.edx_discussions.notifier_api import NotifierUserSerializer
 from openedx.core.lib.api.permissions import ApiKeyHeaderPermission
 
 

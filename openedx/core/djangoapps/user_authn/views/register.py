@@ -34,7 +34,7 @@ from social_django import utils as social_utils
 import third_party_auth
 # Note that this lives in LMS, so this dependency should be refactored.
 # TODO Have the discussions code subscribe to the REGISTER_USER signal instead.
-from lms.djangoapps.discussion.notification_prefs.views import enable_notifications
+from openedx.core.djangoapps.edx_discussions.notification_prefs import enable_notifications
 from openedx.core.djangoapps.lang_pref import LANGUAGE_KEY
 from openedx.core.djangoapps.site_configuration import helpers as configuration_helpers
 from openedx.core.djangoapps.user_api import accounts as accounts_settings
