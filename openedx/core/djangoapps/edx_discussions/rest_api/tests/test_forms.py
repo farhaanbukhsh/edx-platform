@@ -11,7 +11,7 @@ from django.http import QueryDict
 from opaque_keys.edx.locator import CourseLocator
 from six.moves.urllib.parse import urlencode
 
-from openedx.core.djangoapps.edx_discussions.rest_api.forms import CommentListGetForm, ThreadListGetForm
+from ..forms import CommentListGetForm, ThreadListGetForm
 from openedx.core.djangoapps.util.test_forms import FormTestMixin
 
 

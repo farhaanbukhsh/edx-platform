@@ -8,7 +8,8 @@ import logging
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from edx_rest_framework_extensions.auth.jwt.authentication import JwtAuthentication
-from edx_rest_framework_extensions.auth.session.authentication import SessionAuthenticationAllowInactiveUser
+from edx_rest_framework_extensions.auth.session.authentication import \
+    SessionAuthenticationAllowInactiveUser
 from opaque_keys.edx.keys import CourseKey
 from rest_framework import permissions, status
 from rest_framework.exceptions import ParseError, UnsupportedMediaType
@@ -18,9 +19,24 @@ from rest_framework.views import APIView
 from rest_framework.viewsets import ViewSet
 from six import text_type
 
-
+from lms.djangoapps.discussion.django_comment_client.utils import \
+    available_division_schemes
 from lms.djangoapps.instructor.access import update_forum_role
-from lms.djangoapps.discussion.django_comment_client.utils import available_division_schemes
+from openedx.core.djangoapps.django_comment_common.models import Role
+from openedx.core.djangoapps.django_comment_common.utils import (
+    get_course_discussion_settings,
+    set_course_discussion_settings,
+)
+from openedx.core.djangoapps.user_api.accounts.permissions import (
+    CanReplaceUsername,
+    CanRetireUser,
+)
+from openedx.core.djangoapps.user_api.models import UserRetirementStatus
+from openedx.core.lib.api.authentication import BearerAuthenticationAllowInactiveUser
+from openedx.core.lib.api.parsers import MergePatchParser
+from openedx.core.lib.api.view_utils import DeveloperErrorViewMixin, view_auth_classes
+from util.json_request import JsonResponse
+from xmodule.modulestore.django import modulestore
 from .api import (
     create_comment,
     create_thread,
@@ -33,35 +49,22 @@ from .api import (
     get_thread,
     get_thread_list,
     update_comment,
-    update_thread
+    update_thread,
 )
 from .forms import (
     CommentGetForm,
     CommentListGetForm,
     CourseDiscussionRolesForm,
     CourseDiscussionSettingsForm,
-    ThreadListGetForm
+    ThreadListGetForm,
 )
 from .serializers import (
     DiscussionRolesListSerializer,
     DiscussionRolesSerializer,
-    DiscussionSettingsSerializer
+    DiscussionSettingsSerializer,
 )
-from openedx.core.djangoapps.edx_discussions import comment_client
-from openedx.core.djangoapps.edx_discussions.views import get_divided_discussions
-from openedx.core.djangoapps.django_comment_common.models import Role
-from openedx.core.djangoapps.django_comment_common.utils import (
-    get_course_discussion_settings,
-    set_course_discussion_settings
-)
-from openedx.core.djangoapps.user_api.accounts.permissions import CanReplaceUsername, CanRetireUser
-from openedx.core.djangoapps.user_api.models import UserRetirementStatus
-from openedx.core.lib.api.authentication import BearerAuthenticationAllowInactiveUser
-
-from openedx.core.lib.api.parsers import MergePatchParser
-from openedx.core.lib.api.view_utils import DeveloperErrorViewMixin, view_auth_classes
-from util.json_request import JsonResponse
-from xmodule.modulestore.django import modulestore
+from .. import comment_client
+from ..views import get_divided_discussions
 
 log = logging.getLogger(__name__)
 

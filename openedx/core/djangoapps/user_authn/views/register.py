@@ -33,8 +33,6 @@ from social_django import utils as social_utils
 
 import third_party_auth
 # Note that this lives in LMS, so this dependency should be refactored.
-# TODO Have the discussions code subscribe to the REGISTER_USER signal instead.
-from openedx.core.djangoapps.edx_discussions.notification_prefs import enable_notifications
 from openedx.core.djangoapps.lang_pref import LANGUAGE_KEY
 from openedx.core.djangoapps.site_configuration import helpers as configuration_helpers
 from openedx.core.djangoapps.user_api import accounts as accounts_settings
@@ -224,11 +222,7 @@ def create_account_with_params(request, params):
 
     preferences_api.set_user_preference(user, LANGUAGE_KEY, get_language())
 
-    if settings.FEATURES.get('ENABLE_DISCUSSION_EMAIL_DIGEST'):
-        try:
-            enable_notifications(user)
-        except Exception:  # pylint: disable=broad-except
-            log.exception(u"Enable discussion notifications failed for user {id}.".format(id=user.id))
+
 
     _track_user_registration(user, profile, params, third_party_provider)
 

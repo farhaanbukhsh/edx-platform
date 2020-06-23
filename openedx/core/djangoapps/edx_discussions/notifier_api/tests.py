@@ -5,14 +5,12 @@ import itertools
 
 import ddt
 import six
-from six.moves import range
 from django.conf import settings
 from django.test.client import RequestFactory
 from django.test.utils import override_settings
 from opaque_keys.edx.locator import CourseLocator
+from six.moves import range
 
-from openedx.core.djangoapps.edx_discussions.notification_prefs import NOTIFICATION_PREF_KEY
-from openedx.core.djangoapps.edx_discussions.notifier_api import NotifierUsersViewSet
 from openedx.core.djangoapps.course_groups.tests.helpers import CohortFactory
 from openedx.core.djangoapps.django_comment_common.models import Permission, Role
 from openedx.core.djangoapps.lang_pref import LANGUAGE_KEY
@@ -23,6 +21,8 @@ from student.tests.factories import CourseEnrollmentFactory, UserFactory
 from util.testing import UrlResetMixin
 from xmodule.modulestore.tests.django_utils import ModuleStoreTestCase
 from xmodule.modulestore.tests.factories import CourseFactory
+from .views import NotifierUsersViewSet
+from ..notification_prefs import NOTIFICATION_PREF_KEY
 
 
 @ddt.ddt

@@ -22,10 +22,7 @@ from edx_django_utils.monitoring import function_trace
 from functools import wraps
 from opaque_keys.edx.keys import CourseKey
 from rest_framework import status
-from student.models import CourseEnrollment
-from util.json_request import JsonResponse, expect_json
 from web_fragments.fragment import Fragment
-from xmodule.modulestore.django import modulestore
 
 import lms.djangoapps.discussion.django_comment_client.utils as utils
 from lms.djangoapps.courseware.access import has_access
@@ -46,7 +43,6 @@ from lms.djangoapps.discussion.django_comment_client.utils import (
     is_commentable_divided,
     strip_none,
 )
-from openedx.core.djangoapps.edx_discussions.exceptions import TeamDiscussionHiddenFromUserException
 from lms.djangoapps.experiments.utils import get_experiment_user_metadata_context
 from lms.djangoapps.teams import api as team_api
 from openedx.core.djangoapps.django_comment_common.models import CourseDiscussionSettings
@@ -58,8 +54,13 @@ from openedx.core.djangoapps.django_comment_common.utils import (
 from openedx.core.djangoapps.plugin_api.views import EdxFragmentView
 from openedx.features.course_duration_limits.access import \
     generate_course_expired_fragment
+from student.models import CourseEnrollment
+from util.json_request import JsonResponse, expect_json
+from xmodule.modulestore.django import modulestore
 from . import comment_client as cc
+from .comment_client import CommentClientMaintenanceError, CommentClientRequestError
 from .config.waffle import is_forum_daily_digest_enabled, use_bootstrap_flag_enabled
+from .exceptions import TeamDiscussionHiddenFromUserException
 
 log = logging.getLogger("edx.discussions")
 
@@ -269,7 +270,7 @@ def forum_form_discussion(request, course_key):
             unsafethreads, query_params = get_threads(request, course, user_info)  # This might process a search query
             is_staff = has_permission(request.user, 'openclose_thread', course.id)
             threads = [utils.prepare_content(thread, course_key, is_staff) for thread in unsafethreads]
-        except openedx.core.djangoapps.edx_discussions.comment_client.utils.CommentClientMaintenanceError:
+        except CommentClientMaintenanceError:
             return HttpResponseServerError('Forum is in maintenance mode', status=status.HTTP_503_SERVICE_UNAVAILABLE)
         except ValueError:
             return HttpResponseServerError("Invalid group_id")
@@ -368,7 +369,7 @@ def _find_thread(request, course, discussion_id, thread_id):
             response_skip=request.GET.get("resp_skip"),
             response_limit=request.GET.get("resp_limit")
         )
-    except openedx.core.djangoapps.edx_discussions.comment_client.utils.CommentClientRequestError:
+    except CommentClientRequestError:
         return None
     # Verify that the student has access to this thread if belongs to a course discussion module
     thread_context = getattr(thread, "context", "course")
@@ -756,7 +757,7 @@ class DiscussionBoardFragmentView(EdxFragmentView):
             if not settings.REQUIRE_DEBUG:
                 fragment.add_javascript_url(staticfiles_storage.url('discussion/js/discussion_board_factory.js'))
             return fragment
-        except openedx.core.djangoapps.edx_discussions.comment_client.utils.CommentClientMaintenanceError:
+        except CommentClientMaintenanceError:
             log.warning('Forum is in maintenance mode')
             html = render_to_string('discussion/maintenance_fragment.html', {
                 'disable_courseware_js': True,

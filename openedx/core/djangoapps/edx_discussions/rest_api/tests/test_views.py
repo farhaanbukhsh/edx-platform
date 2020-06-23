@@ -24,22 +24,21 @@ from course_modes.tests.factories import CourseModeFactory
 from lms.djangoapps.discussion.django_comment_client.tests.utils import (
     ForumsEnableMixin,
     config_course_discussions,
-    topic_name_to_id
-)
-from openedx.core.djangoapps.edx_discussions.rest_api import api
-from openedx.core.djangoapps.edx_discussions.rest_api.tests.utils import (
-    CommentsServiceMockMixin,
-    ProfileImageTestMixin,
-    make_minimal_cs_comment,
-    make_minimal_cs_thread,
-    make_paginated_api_response
+    topic_name_to_id,
 )
 from openedx.core.djangoapps.course_groups.tests.helpers import config_course_cohorts
-from openedx.core.djangoapps.django_comment_common.models import CourseDiscussionSettings, Role
+from openedx.core.djangoapps.django_comment_common.models import (
+    CourseDiscussionSettings,
+    Role,
+)
 from openedx.core.djangoapps.django_comment_common.utils import seed_permissions_roles
 from openedx.core.djangoapps.oauth_dispatch.jwt import create_jwt_for_user
-from openedx.core.djangoapps.oauth_dispatch.tests.factories import ApplicationFactory, AccessTokenFactory
-from openedx.core.djangoapps.user_api.accounts.image_helpers import get_profile_image_storage
+from openedx.core.djangoapps.oauth_dispatch.tests.factories import (
+    AccessTokenFactory,
+    ApplicationFactory,
+)
+from openedx.core.djangoapps.user_api.accounts.image_helpers import \
+    get_profile_image_storage
 from openedx.core.djangoapps.user_api.models import RetirementState, UserRetirementStatus
 from student.models import get_retired_username_by_username
 from student.tests.factories import CourseEnrollmentFactory, SuperuserFactory, UserFactory
@@ -47,7 +46,19 @@ from util.testing import PatchMediaTypeMixin, UrlResetMixin
 from xmodule.modulestore import ModuleStoreEnum
 from xmodule.modulestore.django import modulestore
 from xmodule.modulestore.tests.django_utils import ModuleStoreTestCase
-from xmodule.modulestore.tests.factories import CourseFactory, ItemFactory, check_mongo_calls
+from xmodule.modulestore.tests.factories import (
+    CourseFactory,
+    ItemFactory,
+    check_mongo_calls,
+)
+from .utils import (
+    CommentsServiceMockMixin,
+    ProfileImageTestMixin,
+    make_minimal_cs_comment,
+    make_minimal_cs_thread,
+    make_paginated_api_response,
+)
+from .. import api
 
 
 class DiscussionAPIViewTestMixin(ForumsEnableMixin, CommentsServiceMockMixin, UrlResetMixin):

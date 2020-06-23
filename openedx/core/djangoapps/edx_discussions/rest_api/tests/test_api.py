@@ -21,8 +21,39 @@ from six.moves.urllib.parse import parse_qs, urlencode, urlparse, urlunparse
 from common.test.utils import MockSignalHandlerMixin, disable_signal
 from lms.djangoapps.courseware.tests.factories import BetaTesterFactory, StaffFactory
 from lms.djangoapps.discussion.django_comment_client.tests.utils import ForumsEnableMixin
-from openedx.core.djangoapps.edx_discussions.rest_api import api
-from openedx.core.djangoapps.edx_discussions.rest_api import (
+from openedx.core.djangoapps.course_groups.models import CourseUserGroupPartitionGroup
+from openedx.core.djangoapps.course_groups.tests.helpers import CohortFactory
+from openedx.core.djangoapps.django_comment_common.models import (
+    FORUM_ROLE_ADMINISTRATOR,
+    FORUM_ROLE_COMMUNITY_TA,
+    FORUM_ROLE_MODERATOR,
+    FORUM_ROLE_STUDENT,
+    Role,
+)
+from openedx.core.lib.exceptions import CourseNotFoundError, PageNotFoundError
+from student.tests.factories import CourseEnrollmentFactory, UserFactory
+from util.testing import UrlResetMixin
+from xmodule.modulestore import ModuleStoreEnum
+from xmodule.modulestore.django import modulestore
+from xmodule.modulestore.tests.django_utils import (
+    ModuleStoreTestCase,
+    SharedModuleStoreTestCase,
+)
+from xmodule.modulestore.tests.factories import CourseFactory, ItemFactory
+from xmodule.partitions.partitions import Group, UserPartition
+from .utils import (
+    CommentsServiceMockMixin,
+    make_minimal_cs_comment,
+    make_minimal_cs_thread,
+    make_paginated_api_response,
+)
+from .. import api
+from ..exceptions import (
+    CommentNotFoundError,
+    DiscussionDisabledError,
+    ThreadNotFoundError,
+)
+from ..views import (
     create_comment,
     create_thread,
     delete_comment,
@@ -33,36 +64,8 @@ from openedx.core.djangoapps.edx_discussions.rest_api import (
     get_thread,
     get_thread_list,
     update_comment,
-    update_thread
+    update_thread,
 )
-from openedx.core.djangoapps.edx_discussions.rest_api.exceptions import (
-    CommentNotFoundError,
-    DiscussionDisabledError,
-    ThreadNotFoundError
-)
-from openedx.core.djangoapps.edx_discussions.rest_api.tests.utils import (
-    CommentsServiceMockMixin,
-    make_minimal_cs_comment,
-    make_minimal_cs_thread,
-    make_paginated_api_response
-)
-from openedx.core.djangoapps.course_groups.models import CourseUserGroupPartitionGroup
-from openedx.core.djangoapps.course_groups.tests.helpers import CohortFactory
-from openedx.core.djangoapps.django_comment_common.models import (
-    FORUM_ROLE_ADMINISTRATOR,
-    FORUM_ROLE_COMMUNITY_TA,
-    FORUM_ROLE_MODERATOR,
-    FORUM_ROLE_STUDENT,
-    Role
-)
-from openedx.core.lib.exceptions import CourseNotFoundError, PageNotFoundError
-from student.tests.factories import CourseEnrollmentFactory, UserFactory
-from util.testing import UrlResetMixin
-from xmodule.modulestore import ModuleStoreEnum
-from xmodule.modulestore.django import modulestore
-from xmodule.modulestore.tests.django_utils import ModuleStoreTestCase, SharedModuleStoreTestCase
-from xmodule.modulestore.tests.factories import CourseFactory, ItemFactory
-from xmodule.partitions.partitions import Group, UserPartition
 
 
 def _remove_discussion_tab(course, user_id):

@@ -6,7 +6,7 @@ URLs for the notifier api app
 from django.conf.urls import include, url
 from rest_framework import routers
 
-from openedx.core.djangoapps.edx_discussions.notifier_api import NotifierUsersViewSet
+from .views import NotifierUsersViewSet
 
 notifier_api_router = routers.DefaultRouter()
 notifier_api_router.register(r'users', NotifierUsersViewSet, basename="notifier_users")

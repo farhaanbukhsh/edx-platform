@@ -13,21 +13,13 @@ from django.test.client import RequestFactory
 from six.moves.urllib.parse import urlparse
 
 from lms.djangoapps.discussion.django_comment_client.tests.utils import ForumsEnableMixin
-from openedx.core.djangoapps.edx_discussions.rest_api import CommentSerializer, ThreadSerializer, get_context
-from openedx.core.djangoapps.edx_discussions.rest_api.tests.utils import (
-    CommentsServiceMockMixin,
-    make_minimal_cs_comment,
-    make_minimal_cs_thread
-)
 from openedx.core.djangoapps.course_groups.tests.helpers import CohortFactory
-from openedx.core.djangoapps.edx_discussions.comment_client.comment import Comment
-from openedx.core.djangoapps.edx_discussions.comment_client.thread import Thread
 from openedx.core.djangoapps.django_comment_common.models import (
     FORUM_ROLE_ADMINISTRATOR,
     FORUM_ROLE_COMMUNITY_TA,
     FORUM_ROLE_MODERATOR,
     FORUM_ROLE_STUDENT,
-    Role
+    Role,
 )
 from student.tests.factories import UserFactory
 from util.testing import UrlResetMixin
@@ -35,6 +27,13 @@ from xmodule.modulestore import ModuleStoreEnum
 from xmodule.modulestore.django import modulestore
 from xmodule.modulestore.tests.django_utils import SharedModuleStoreTestCase
 from xmodule.modulestore.tests.factories import CourseFactory
+from .utils import (
+    CommentsServiceMockMixin,
+    make_minimal_cs_comment,
+    make_minimal_cs_thread,
+)
+from ..serializers import CommentSerializer, ThreadSerializer, get_context
+from ...comment_client import Comment, Thread
 
 
 @ddt.ddt
@@ -42,6 +41,7 @@ class SerializerTestMixin(ForumsEnableMixin, CommentsServiceMockMixin, UrlResetM
     """
     Test Mixin for Serializer tests
     """
+
     @classmethod
     @mock.patch.dict("django.conf.settings.FEATURES", {"ENABLE_DISCUSSION_SERVICE": True})
     def setUpClass(cls):

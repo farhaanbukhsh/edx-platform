@@ -26,7 +26,6 @@ from lms.djangoapps.courseware.views import views as courseware_views
 from lms.djangoapps.courseware.views.index import CoursewareIndex
 from lms.djangoapps.courseware.views.views import CourseTabView, EnrollStaffView, StaticCourseTabView
 from openedx.core.djangoapps.edx_discussions import views as discussion_views
-from openedx.core.djangoapps.edx_discussions.notification_prefs import views as notification_prefs_views
 from lms.djangoapps.instructor.views import coupons as instructor_coupons_views
 from lms.djangoapps.instructor.views import instructor_dashboard as instructor_dashboard_views
 from lms.djangoapps.instructor.views import registration_codes as instructor_registration_codes_views
@@ -72,25 +71,6 @@ if settings.DEBUG or settings.FEATURES.get('ENABLE_DJANGO_ADMIN_SITE'):
 # pylint: disable=invalid-name
 handler404 = static_template_view_views.render_404
 handler500 = static_template_view_views.render_500
-
-notification_prefs_urls = [
-    url(r'^notification_prefs/enable/', notification_prefs_views.ajax_enable),
-    url(r'^notification_prefs/disable/', notification_prefs_views.ajax_disable),
-    url(r'^notification_prefs/status/', notification_prefs_views.ajax_status),
-
-    url(
-        r'^notification_prefs/unsubscribe/(?P<token>[a-zA-Z0-9-_=]+)/',
-        notification_prefs_views.set_subscription,
-        {'subscribe': False},
-        name='unsubscribe_forum_update',
-    ),
-    url(
-        r'^notification_prefs/resubscribe/(?P<token>[a-zA-Z0-9-_=]+)/',
-        notification_prefs_views.set_subscription,
-        {'subscribe': True},
-        name='resubscribe_forum_update',
-    ),
-]
 
 
 urlpatterns = [
@@ -751,8 +731,6 @@ if settings.FEATURES.get('ENABLE_DISCUSSION_SERVICE'):
         ),
     ]
 
-if settings.FEATURES.get('ENABLE_FORUM_DAILY_DIGEST'):
-    urlpatterns += notification_prefs_urls
 
 urlpatterns += [
     url(r'^bulk_email/', include('bulk_email.urls')),

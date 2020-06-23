@@ -12,7 +12,7 @@ from django.views.decorators.http import require_GET, require_POST
 from six import text_type
 
 from edxmako.shortcuts import render_to_response
-from openedx.core.djangoapps.edx_discussions.notification_prefs import NOTIFICATION_PREF_KEY
+from . import NOTIFICATION_PREF_KEY
 from openedx.core.djangoapps.user_api.models import UserPreference
 from openedx.core.djangoapps.user_api.preferences.api import delete_user_preference
 from openedx.core.lib.user_utils import UsernameCipher, UsernameDecryptionException

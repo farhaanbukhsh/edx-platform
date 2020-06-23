@@ -8,7 +8,6 @@ from django.core.exceptions import ValidationError
 from django.urls import reverse
 from rest_framework import serializers
 from six.moves.urllib.parse import urlencode, urlunparse
-from student.models import get_user_by_username_or_email
 
 from lms.djangoapps.discussion.django_comment_client.utils import (
     course_discussion_division_enabled,
@@ -16,11 +15,6 @@ from lms.djangoapps.discussion.django_comment_client.utils import (
     get_group_name,
     get_group_names_by_id,
     is_comment_too_deep,
-)
-from openedx.core.djangoapps.edx_discussions.rest_api.permissions import (
-    NON_UPDATABLE_COMMENT_FIELDS,
-    NON_UPDATABLE_THREAD_FIELDS,
-    get_editable_fields,
 )
 from openedx.core.djangoapps.django_comment_common.models import (
     FORUM_ROLE_ADMINISTRATOR,
@@ -30,14 +24,20 @@ from openedx.core.djangoapps.django_comment_common.models import (
 )
 from openedx.core.djangoapps.django_comment_common.utils import \
     get_course_discussion_settings
+from student.models import get_user_by_username_or_email
+from .permissions import (
+    NON_UPDATABLE_COMMENT_FIELDS,
+    NON_UPDATABLE_THREAD_FIELDS,
+    get_editable_fields,
+)
 from .render import render_body
-from ..views import get_divided_discussions
 from ..comment_client import (
     Comment,
     CommentClientRequestError,
     Thread,
     User as CommentClientUser,
 )
+from ..views import get_divided_discussions
 
 
 def get_context(course, request, thread=None):

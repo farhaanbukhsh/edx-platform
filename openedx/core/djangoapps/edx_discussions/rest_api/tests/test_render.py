@@ -7,7 +7,7 @@ from unittest import TestCase
 
 import ddt
 
-from openedx.core.djangoapps.edx_discussions.rest_api import render_body
+from ..render import render_body
 
 
 def _add_p_tags(raw_body):
