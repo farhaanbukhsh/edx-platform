@@ -37,10 +37,10 @@ When refering to XBlocks, we use the entry-point name. For example,
 
 # We intentionally define lots of variables that aren't used, and
 # want to import all variables from base settings files
-# pylint: disable=unused-import
 
+# pylint: disable=unused-import, useless-suppression, wrong-import-order, wrong-import-position
 
-import imp
+import importlib.util
 import os
 import sys
 from datetime import timedelta
@@ -111,7 +111,7 @@ from lms.envs.common import (
     _make_locale_paths,
 )
 from path import Path as path
-from django.urls import reverse_lazy  # pylint: disable=wrong-import-order
+from django.urls import reverse_lazy
 
 from lms.djangoapps.lms_xblock.mixin import LmsBlockMixin
 from cms.lib.xblock.authoring_mixin import AuthoringMixin
@@ -123,6 +123,8 @@ from openedx.core.djangoapps.theming.helpers_dirs import (
 from openedx.core.lib.license import LicenseMixin
 from openedx.core.lib.derived import derived, derived_collection_entry
 from openedx.core.release import doc_version
+
+# pylint: enable=useless-suppression
 
 ################ Enable credit eligibility feature ####################
 ENABLE_CREDIT_ELIGIBILITY = True
@@ -837,7 +839,7 @@ DATABASES = {
         'CONN_MAX_AGE': 0,
         'ENGINE': 'django.db.backends.mysql',
         'HOST': 'localhost',
-        'NAME': 'dxapp',
+        'NAME': 'edxapp',
         'OPTIONS': {},
         'PASSWORD': 'password',
         'PORT': '3306',
@@ -1262,9 +1264,10 @@ YOUTUBE = {
 
 YOUTUBE_API_KEY = 'PUT_YOUR_API_KEY_HERE'
 
-############################# VIDEO UPLOAD PIPELINE #############################
+############################# SETTINGS FOR VIDEO UPLOAD PIPELINE #############################
 
 VIDEO_UPLOAD_PIPELINE = {
+    'VEM_S3_BUCKET': '',
     'BUCKET': '',
     'ROOT_PATH': '',
     'CONCURRENT_UPLOAD_LIMIT': 4,
@@ -1400,6 +1403,9 @@ INSTALLED_APPS = [
     # Catalog integration
     'openedx.core.djangoapps.catalog',
 
+    # Programs support
+    'openedx.core.djangoapps.programs.apps.ProgramsConfig',
+
     # django-oauth-toolkit
     'oauth2_provider',
 
@@ -1466,6 +1472,7 @@ INSTALLED_APPS = [
     'openedx.features.discounts',
     'experiments',
 
+    'openedx.core.djangoapps.external_user_ids',
     # so sample_task is available to celery workers
     'openedx.core.djangoapps.heartbeat',
 
@@ -1475,6 +1482,9 @@ INSTALLED_APPS = [
     # Management of per-user schedules
     'openedx.core.djangoapps.schedules',
     'rest_framework_jwt',
+
+    # Learning Sequence Navigation
+    'openedx.core.djangoapps.content.learning_sequences.apps.LearningSequencesConfig',
 ]
 
 
@@ -1620,10 +1630,8 @@ OPTIONAL_APPS = (
 for app_name, insert_before in OPTIONAL_APPS:
     # First attempt to only find the module rather than actually importing it,
     # to avoid circular references - only try to import if it can't be found
-    # by find_module, which doesn't work with import hooks
-    try:
-        imp.find_module(app_name)
-    except ImportError:
+    # by find_spec, which doesn't work with import hooks
+    if importlib.util.find_spec(app_name) is None:
         try:
             __import__(app_name)
         except ImportError:
@@ -1897,6 +1905,12 @@ derived('HELP_TOKENS_LANGUAGE_CODE', 'HELP_TOKENS_VERSION')
 RETRY_ACTIVATION_EMAIL_MAX_ATTEMPTS = 5
 RETRY_ACTIVATION_EMAIL_TIMEOUT = 0.5
 
+# Software Secure request retry settings
+# Time in seconds before a retry of the task should be 60 mints.
+SOFTWARE_SECURE_REQUEST_RETRY_DELAY = 60 * 60
+# Maximum of 6 retries before giving up.
+SOFTWARE_SECURE_RETRY_MAX_ATTEMPTS = 6
+
 ############## DJANGO-USER-TASKS ##############
 
 # How long until database records about the outcome of a task and its artifacts get deleted?
@@ -1948,6 +1962,8 @@ RECALCULATE_GRADES_ROUTING_KEY = DEFAULT_PRIORITY_QUEUE
 
 # Queue to use for updating grades due to grading policy change
 POLICY_CHANGE_GRADES_ROUTING_KEY = 'edx.lms.core.default'
+
+SOFTWARE_SECURE_VERIFICATION_ROUTING_KEY = 'edx.lms.core.default'
 
 # Rate limit for regrading tasks that a grading policy change can kick off
 POLICY_CHANGE_TASK_RATE_LIMIT = '300/h'
@@ -2045,12 +2061,6 @@ CORS_ORIGIN_ALLOW_ALL = False
 
 LOGIN_REDIRECT_WHITELIST = []
 
-############### Settings for video pipeline ##################
-VIDEO_UPLOAD_PIPELINE = {
-    'BUCKET': '',
-    'ROOT_PATH': '',
-}
-
 DEPRECATED_ADVANCED_COMPONENT_TYPES = []
 
 ########################## VIDEO IMAGE STORAGE ############################
@@ -2084,6 +2094,7 @@ VIDEO_TRANSCRIPTS_SETTINGS = dict(
 )
 
 VIDEO_TRANSCRIPTS_MAX_AGE = 31536000
+
 
 ##### shoppingcart Payment #####
 PAYMENT_SUPPORT_EMAIL = 'billing@example.com'
@@ -2222,3 +2233,6 @@ DISABLE_DEPRECATED_SIGNIN_URL = False
 # .. toggle_tickets: ARCH-1253
 # .. toggle_status: supported
 DISABLE_DEPRECATED_SIGNUP_URL = False
+
+##### LOGISTRATION RATE LIMIT SETTINGS #####
+LOGISTRATION_RATELIMIT_RATE = '500/5m'

@@ -103,6 +103,8 @@
     "Add Country": "Gehitu Estatua",
     "Add Learners": "Gehitu ikasleak",
     "Add New Component": "Gehitu beste osagai bat",
+    "Add Thumbnail": "Gehitu Thumbnail",
+    "Add Thumbnail - {videoName}": "Gehitu Thumbnail - {videoName}",
     "Add a Chapter": "Gehitu kapitulua",
     "Add a New Cohort": "Gehitu beste kohorte bat",
     "Add another group": "Gehitu beste talde bat",
@@ -165,6 +167,7 @@
     "Are you sure you want to delete this post?": "Ziur al zaude mezu hau ezabatu egin nahi duzula?",
     "Are you sure you want to delete this response?": "Ziur al zaude erantzun hau ezabatu egin nahi duzula?",
     "Are you sure you want to delete this update?": "Ziur al zaude eguneraketa hau ezabatu egin nahi duzula?",
+    "Are you sure you want to remove this transcript?": "Ziur al zaude transkripzio hau ezabatu egin nahi duzula?",
     "Are you sure you want to select this session?": "Ziur al zaude saio hau aukeratu nahi duzula?",
     "Are you sure?": "Ziur al zaude?",
     "Assessment": "Ebaluazioa",
@@ -296,6 +299,10 @@
     "Congratulations!": "Zorionak!",
     "Constrain proportions": "Murriztu proportzioak",
     "Contact Us": "Jarri gurekin harremanetan",
+    "Contains {count} group": [
+      "Talde {count} du",
+      "{count} talde ditu"
+    ],
     "Content Group ID": "Eduki-multzoaren IDa",
     "Content Group Name": "Eduki-multzoaren izena",
     "Continue to my practice exam": "Joan praktika-azterketara",
@@ -370,7 +377,6 @@
     "Default": "Berezkoa",
     "Default (Local Time Zone)": "Berezko (tokian tokiko ordu-eremua)",
     "Delete": "Ezabatu",
-    "Delete \"<%= signatoryName %>\" from the list of signatories?": "\"<%= signatoryName %>\" ezabatu nahi duzu sinatzaileen zerrendatik?",
     "Delete File Confirmation": "Fitxategia ezabatzeko konfirmazioa",
     "Delete My Account": "Ezabatu nire kontua",
     "Delete Page Confirmation": "Orria ezabatzeko konfirmazioa",
@@ -421,6 +427,7 @@
     "Edit HTML": "Editatu HTMLa",
     "Edit Membership": "Editatu partaidetza",
     "Edit Team": "Editatu taldea",
+    "Edit Thumbnail": "Editatu Thumbnail",
     "Edit Your Name": "Editatu zure izena",
     "Edit this certificate?": "Ziurtagiri hau editatu nahi duzu?",
     "Editable": "Editagarria",
@@ -497,7 +504,6 @@
     "Fill browser": "Zabaldu nabigatzailea",
     "Filter": "Filtroa",
     "Filter and sort topics": "Iragazi eta ordenatu gaiak",
-    "Final Grade": "Azken kalifikazioa",
     "Financial Assistance Application": "Finantza-laguntzarako eskaria",
     "Find": "Bilatu",
     "Find a course": "Bilatu ikastaroa",
@@ -521,7 +527,6 @@
     "General": "Orokorra",
     "Generate": "Sortu",
     "Generate the user's certificate": "Sortu erabiltzailearen ziurtagiria",
-    "Get Credit": "Lortu kreditua",
     "Go Back": "Itzuli",
     "Go to Dashboard": "Joan aginte-panelera",
     "Go to my Dashboard": "Joan aginte-panelera",
@@ -568,13 +573,14 @@
     "Hide Timer": "Ezkutatu denbora",
     "Hide closed captions": "Ezkutatu itxitako azpitituluak",
     "Hide notes": "Ezkutatu oharrak",
+    "Hide transcripts ({transcriptCount})": "Ezkutatu transkripzioak ({transcriptCount})",
     "Hiding from Students": "Ikasleei ezkutatzen",
     "High Definition": "Definizio altua",
     "Highlighted text": "Nabarmendutako testua",
     "Horizontal Rule (Ctrl+R)": "Marra horizontala (Ctrl+R)",
     "Horizontal line": "Lerro horizontala",
     "Horizontal space": "Espazio horizontala",
-    "How to use %(platform_name)s discussions": "Nola erabili %(platform_name)s eztabaidak",
+    "How to use %(platform_name)s discussions": "Nola erabili %(platform_name)s plataformako eztabaidak",
     "Hyperlink (Ctrl+L)": "Hiperesteka  (Ctrl+L)",
     "ID": "ID",
     "Ignore": "Baztertu",
@@ -586,6 +592,7 @@
     "Image description": "Irudiaren deskribapena",
     "Image must be in PNG format": "Irudiak PNG formatua izan behar du",
     "Image must be in PNG format.": "Irudiak PNG formatua izan behar du.",
+    "Image upload failed": "irudia kargatzeak kale egin du",
     "In Progress": "Lanean",
     "Increase indent": "Handitu koska",
     "Individual Exceptions": "Norbanakoen salbuespenak",
@@ -684,6 +691,7 @@
     "Markdown Editing Help": "Markdown sintaxian editatzeko laguntza",
     "Match case": "Maiuskula/minuskula",
     "Maximum": "Gehienekoa",
+    "Maximum file size: {maxFileSize} GB": "Fitxategien gehienezko tamaina: {maxFileSize} GB",
     "May": "Maiatza",
     "Membership": "Partaidetza",
     "Merge cells": "Batu gelaxkak",
@@ -860,6 +868,7 @@
     "Release Time in UTC:": "Argitaratze-ordua UTC-n:",
     "Release:": "Argitaratzea:",
     "Remove": "Ezabatu",
+    "Remove Transcript": "Ezabatu transkripzioa",
     "Remove all": "Kendu guztiak",
     "Remove chapter %(chapterDisplayName)s": "Ezabatu %(chapterDisplayName)s atala",
     "Remove file": "Ezabatu fitxategia",
@@ -924,7 +933,6 @@
     "Select a group type": "Aukeratu talde-mota",
     "Select a section or problem": "Aukeratu atala edo ariketa",
     "Select a session:": "Aukeratu saioa:",
-    "Select a subject for your support request.": "Aukeratu laguntza-eskaeraren gaia.",
     "Select all": "Aukeratu guztiak",
     "Select language": "Aukeratu hizkuntza",
     "Select one or more groups:": "Aukera talde bat edo gehiago:",
@@ -953,6 +961,7 @@
     "Show blocks": "Erakutsi blokeak",
     "Show invisible characters": "Erakutsi ezkutuko karaktereak",
     "Show notes": "Erakutsi oharrak",
+    "Show transcripts ({transcriptCount})": "Erakutsi transkripzioak  ({transcriptCount})",
     "Showing all responses": "Erantzun guztiak erakusten",
     "Sign In": "Hasi saioa",
     "Sign in": "Erregistratu",
@@ -1042,7 +1051,6 @@
     "Textbook Name": "Testu-liburuaren izena",
     "Textbook information": "Testu-liburuaren informazioa",
     "Textbook name is required": "Testu-liburuaren izena beharrezkoa da",
-    "Thank you %(full_name)s! We have received your payment for %(course_name)s.": "Eskerrik asko %(full_name)s! Zure ordainketa jaso dugu %(course_name)s dela-eta.",
     "Thank you! We have received your payment for {courseName}.": "Eskerrik asko! Zure ordainketa jaso dugu {courseName} ikastarorako.",
     "The URL you entered seems to be an email address. Do you want to add the required mailto: prefix?": "Badirudi sartu duzun URL-a e-posta helbidea dela. Nahi al duzu beharrrezko den mailto: aurrizkia gehitzea?",
     "The URL you entered seems to be an external link. Do you want to add the required http:// prefix?": "Badirudi sartu duzun URL-a kanporako esteka dela. Nahi al duzu beharrezko den http:// aurrizkia gehitzea?",
@@ -1063,7 +1071,6 @@
     "The grading process is still running. Refresh the page to see updates.": "Kalifikazio-prozesua abian da. Eguneratu orria azken emaitzak ikusteko.",
     "The language that team members primarily use to communicate with each other.": "Elkarrekin komunikatzeko taldeko partaideek erabiltzen duten hizkuntza nagusia.",
     "The language used throughout this site. This site is currently available in a limited number of languages. Changing the value of this field will cause the page to refresh.": "Gunean zehar erabilitako hizkuntza. Gune honetan hizkuntza kopuru mugatua dago eskura eskura. Eremu honetan balorea aldatzeak orria freskatuko du.",
-    "The more you tell us, the more quickly and helpfully we can respond!": "Zenbat eta gehiago esan, orduan eta azkarrago eta hobeto erantzungo dizugu!",
     "The name that identifies you on {platform_name}. You cannot change your username.": "{platform_name} plataforman identifikatzen zaituen izena. Ezin duzu erabiltzaile-izena aldatu.",
     "The selected content group does not exist": "Aukeratutako eduki-taldea ez da existitzen",
     "The server could not be contacted.": "Ezin izan da zerbitzariarekin konektatu.",
@@ -1163,6 +1170,7 @@
     "Update": "Eguneratu",
     "Update Settings": "Eguneratu ezarpenak",
     "Update team.": "Eguneratu taldea.",
+    "Updating Tags": "Etiketak eguneratzen",
     "Updating with latest library content": "Liburutegiaren azken edukiarekin eguneratzen",
     "Upgrade Deadline": "Eguneratu azken data",
     "Upload": "Kargatu",
@@ -1189,6 +1197,7 @@
     "Upper Roman": "Letra erromatar larria",
     "Url": "URLa",
     "Use as a Prerequisite": "Erabil aurrebaldintza gisa",
+    "Use the All Topics menu to find specific topics.": "Erabili Gai guztiak izeneko menua gai jakin bat bilatzeko.",
     "Used": "Erabilia",
     "User Email": "Erabiltzailearen posta elektronikoa",
     "Username": "Erabiltzaile-izena",
@@ -1199,7 +1208,6 @@
     "Verification Deadline": "Egiaztatzeko azken data",
     "Verified": "Egiaztatuta",
     "Verified Certificate": "Egiaztatutako ziurtagiria",
-    "Verify Now": "Egiaztatu orain!",
     "Version": "Bertsioa",
     "Vertical space": "Espazio bertikala",
     "Very loud": "Oso altu",
@@ -1302,6 +1310,7 @@
     "Your team could not be updated.": "Zure taldea ezin izan da eguneratu.",
     "Your upload of '{file}' failed.": "'{file}' ez da ondo kargatu.",
     "Your upload of '{file}' succeeded.": "'{file}' ondo kargatu da.",
+    "Your video uploads are not complete.": "Bideoak kargatzea ez da osatu.",
     "Your {program} Certificate": "{program}-ko Ziurtagiria",
     "Zoom In": "Hurbildu",
     "Zoom Out": "Urrundu",
@@ -1341,6 +1350,8 @@
     "incorrect": "okerra",
     "last activity": "azken jarduera",
     "less than a minute": "minutu bat baino gutxiago",
+    "minute": "minutu",
+    "minutes": "minutu",
     "name": "izena",
     "off": "itzalita",
     "on": "piztuta",
@@ -1358,6 +1369,8 @@
     "price": "prezioa",
     "remove": "ezabatu",
     "remove all": "ezabatu guztiak",
+    "second": "segundu",
+    "seconds": "segundu",
     "section": "atala",
     "send an email message to {email}": "bidali e-posta mezua honi: {email}",
     "subsection": "azpiatala",
@@ -1385,6 +1398,7 @@
     ],
     "{email}": "{email}",
     "{label}: {status}": "{label}: {status}",
+    "{minutes} {unit}": "{minutes} {unit}",
     "{numResponses} response": [
       "erantzun {numResponses}",
       "{numResponses} erantzun"
@@ -1414,6 +1428,7 @@
       "{num_points} puntu posinle (kalifikatu gabea, emaitzak ezkutuan)"
     ],
     "{paragraph}=p;{preformatted}=pre;{heading3}=h3;{heading4}=h4;{heading5}=h5;{heading6}=h6": "{paragraph}=p;{preformatted}=pre;{heading3}=h3;{heading4}=h4;{heading5}=h5;{heading6}=h6",
+    "{seconds} {unit}": "{seconds} {unit}",
     "{start_strong}{total}{end_strong} words submitted in total.": "{start_strong}{total}{end_strong} denera bidalitako hitzak",
     "{totalItems} total": "denera {totalItems}",
     "{total_results} result": [
@@ -1443,7 +1458,7 @@
       if (typeof(value) == 'undefined') {
         return (count == 1) ? singular : plural;
       } else {
-        return value[django.pluralidx(count)];
+        return value.constructor === Array ? value[django.pluralidx(count)] : value;
       }
     };
 
@@ -1477,7 +1492,7 @@
     /* formatting library */
 
     django.formats = {
-    "DATETIME_FORMAT": "N j, Y, P",
+    "DATETIME_FORMAT": "Y\\k\\o N j\\a, H:i",
     "DATETIME_INPUT_FORMATS": [
       "%Y-%m-%d %H:%M:%S",
       "%Y-%m-%d %H:%M:%S.%f",
@@ -1507,11 +1522,11 @@
       "%d %B, %Y"
     ],
     "DECIMAL_SEPARATOR": ",",
-    "FIRST_DAY_OF_WEEK": "0",
-    "MONTH_DAY_FORMAT": "F j",
-    "NUMBER_GROUPING": "0",
-    "SHORT_DATETIME_FORMAT": "m/d/Y P",
-    "SHORT_DATE_FORMAT": "Y M j",
+    "FIRST_DAY_OF_WEEK": 1,
+    "MONTH_DAY_FORMAT": "F\\r\\e\\n j\\a",
+    "NUMBER_GROUPING": 3,
+    "SHORT_DATETIME_FORMAT": "Y-m-d H:i",
+    "SHORT_DATE_FORMAT": "Y-m-d",
     "THOUSAND_SEPARATOR": ".",
     "TIME_FORMAT": "H:i",
     "TIME_INPUT_FORMATS": [
@@ -1519,7 +1534,7 @@
       "%H:%M:%S.%f",
       "%H:%M"
     ],
-    "YEAR_MONTH_FORMAT": "F Y"
+    "YEAR_MONTH_FORMAT": "Y\\k\\o F"
   };
 
     django.get_format = function(format_type) {

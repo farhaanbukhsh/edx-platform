@@ -14,7 +14,7 @@ from simple_history.models import HistoricalRecords
 
 from student.models import CourseEnrollment
 
-from .constants import ProgramCourseEnrollmentStatuses, ProgramEnrollmentStatuses
+from .constants import ProgramCourseEnrollmentRoles, ProgramCourseEnrollmentStatuses, ProgramEnrollmentStatuses
 
 
 class ProgramEnrollment(TimeStampedModel):
@@ -105,11 +105,6 @@ class ProgramCourseEnrollment(TimeStampedModel):
 
         # For each program enrollment, there may be only one
         # waiting program-course enrollment per course key.
-        # This same constraint is implicitly enforced for
-        # completed program-course enrollments by the
-        # OneToOneField on `course_enrollment`, which mandates that
-        # there may be at most one program-course enrollment per
-        # (user, course) pair.
         unique_together = (
             ('program_enrollment', 'course_key'),
         )
@@ -147,5 +142,30 @@ class ProgramCourseEnrollment(TimeStampedModel):
             " course_enrollment=<{self.course_enrollment}>"
             " course_key={self.course_key}"
             " status={self.status!r}"
+            ">"
+        ).format(self=self)
+
+
+class CourseAccessRoleAssignment(TimeStampedModel):
+    """
+    This model represents a role that should be assigned to the eventual user of a pending enrollment.
+
+    .. no_pii:
+    """
+    class Meta(object):
+        unique_together = ('role', 'enrollment')
+
+    role = models.CharField(max_length=64, choices=ProgramCourseEnrollmentRoles.__MODEL_CHOICES__)
+    enrollment = models.ForeignKey(ProgramCourseEnrollment, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return '[CourseAccessRoleAssignment id={}]'.format(self.id)
+
+    def __repr__(self):
+        return (
+            "<CourseAccessRoleAssignment"  # pylint: disable=missing-format-attribute
+            " id={self.id}"
+            " role={self.role!r}"
+            " enrollment={self.enrollment!r}"
             ">"
         ).format(self=self)

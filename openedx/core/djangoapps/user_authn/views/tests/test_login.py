@@ -25,7 +25,6 @@ from openedx.core.djangoapps.password_policy.compliance import (
     NonCompliantPasswordException,
     NonCompliantPasswordWarning
 )
-from openedx.core.djangoapps.user_api.config.waffle import PREVENT_AUTH_USER_WRITES, waffle
 from openedx.core.djangoapps.user_api.accounts import EMAIL_MIN_LENGTH, EMAIL_MAX_LENGTH
 from openedx.core.djangoapps.user_authn.cookies import jwt_cookies
 from openedx.core.djangoapps.user_authn.views.login import (
@@ -179,19 +178,6 @@ class LoginTest(SiteMixin, CacheIsolationTestCase):
         self._assert_response(response, success=True)
         self._assert_audit_log(mock_audit_log, 'info', [u'Login success', unicode_email])
 
-    def test_last_login_updated(self):
-        old_last_login = self.user.last_login
-        self.test_login_success()
-        self.user.refresh_from_db()
-        assert self.user.last_login > old_last_login
-
-    def test_login_success_prevent_auth_user_writes(self):
-        with waffle().override(PREVENT_AUTH_USER_WRITES, True):
-            old_last_login = self.user.last_login
-            self.test_login_success()
-            self.user.refresh_from_db()
-            assert old_last_login == self.user.last_login
-
     def test_login_fail_no_user_exists(self):
         nonexistent_email = u'not_a_user@edx.org'
         response, mock_audit_log = self._login_response(
@@ -335,7 +321,7 @@ class LoginTest(SiteMixin, CacheIsolationTestCase):
         # (cookies are deleted by setting an expiration date in 1970)
         for cookie_name in [settings.EDXMKTG_LOGGED_IN_COOKIE_NAME, settings.EDXMKTG_USER_INFO_COOKIE_NAME]:
             cookie = self.client.cookies[cookie_name]
-            self.assertIn("01-Jan-1970", cookie.get('expires'))
+            self.assertIn("01 Jan 1970", cookie.get('expires').replace('-', ' '))
 
     @override_settings(
         EDXMKTG_LOGGED_IN_COOKIE_NAME=u"unicode-logged-in",
@@ -825,8 +811,8 @@ class LoginSessionViewTest(ApiTestCase):
                 "type": "email",
                 "required": True,
                 "label": "Email",
-                "placeholder": "username@domain.com",
-                "instructions": u"The email address you used to register with {platform_name}".format(
+                "placeholder": "",
+                "instructions": "The email address you used to register with {platform_name}".format(
                     platform_name=settings.PLATFORM_NAME
                 ),
                 "restrictions": {
@@ -910,7 +896,7 @@ class LoginSessionViewTest(ApiTestCase):
         # Verify that the session expiration was set correctly
         cookie = self.client.cookies[settings.SESSION_COOKIE_NAME]
         expected_expiry = datetime.datetime.utcnow() + datetime.timedelta(weeks=4)
-        self.assertIn(expected_expiry.strftime('%d-%b-%Y'), cookie.get('expires'))
+        self.assertIn(expected_expiry.strftime('%d %b %Y'), cookie.get('expires').replace('-', ' '))
 
     def test_invalid_credentials(self):
         # Create a test user

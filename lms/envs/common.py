@@ -26,10 +26,10 @@ Longer TODO:
 # Pylint gets confused by path.py instances, which report themselves as class
 # objects. As a result, pylint applies the wrong regex in validating names,
 # and throws spurious errors. Therefore, we disable invalid-name checking.
-# pylint: disable=invalid-name, wrong-import-position
+# pylint: disable=invalid-name
 
 
-import imp
+import importlib.util
 import sys
 import os
 
@@ -478,6 +478,19 @@ FEATURES = {
     # .. toggle_status: supported
     # .. toggle_warnings: None
     'ENABLE_ORA_USER_STATE_UPLOAD_DATA': False,
+
+    # .. toggle_name: ENABLE_ORA_USERNAMES_ON_DATA_EXPORT
+    # .. toggle_implementation: DjangoSetting
+    # .. toggle_default: False
+    # .. toggle_description: Set to True to add deanonymized usernames to ORA data report.
+    # .. toggle_category: ora
+    # .. toggle_use_cases: incremental_release
+    # .. toggle_creation_date: 2020-06-11
+    # .. toggle_expiration_date: None
+    # .. toggle_tickets: https://openedx.atlassian.net/browse/TNL-7273
+    # .. toggle_status: supported
+    # .. toggle_warnings: None
+    'ENABLE_ORA_USERNAMES_ON_DATA_EXPORT': False,
 }
 
 # Settings for the course reviews tool template and identification key, set either to None to disable course reviews
@@ -511,15 +524,23 @@ XQUEUE_INTERFACE = {
 # Used with Email sending
 RETRY_ACTIVATION_EMAIL_MAX_ATTEMPTS = 5
 RETRY_ACTIVATION_EMAIL_TIMEOUT = 0.5
+
+# Software Secure request retry settings
+# Time in seconds before a retry of the task should be 60 mints.
+SOFTWARE_SECURE_REQUEST_RETRY_DELAY = 60 * 60
+# Maximum of 6 retries before giving up.
+SOFTWARE_SECURE_RETRY_MAX_ATTEMPTS = 6
+
 PASSWORD_RESET_EMAIL_RATE_LIMIT = {
     'no_of_emails': 1,
     'per_seconds': 60
 }
+RETRY_CALENDAR_SYNC_EMAIL_MAX_ATTEMPTS = 5
 # Deadline message configurations
 COURSE_MESSAGE_ALERT_DURATION_IN_DAYS = 14
 
 ############################# SET PATH INFORMATION #############################
-PROJECT_ROOT = path(__file__).abspath().dirname().dirname()  # /edx-platform/lms pylint: disable=no-value-for-parameter
+PROJECT_ROOT = path(__file__).abspath().dirname().dirname()  # /edx-platform/lms
 REPO_ROOT = PROJECT_ROOT.dirname()
 COMMON_ROOT = REPO_ROOT / "common"
 OPENEDX_ROOT = REPO_ROOT / "openedx"
@@ -1144,6 +1165,10 @@ SESSION_SERIALIZER = 'openedx.core.lib.session_serializers.PickleSerializer'
 SESSION_COOKIE_DOMAIN = ""
 SESSION_COOKIE_NAME = 'sessionid'
 
+# django-session-cookie middleware
+DCS_SESSION_COOKIE_SAMESITE = 'None'
+DCS_SESSION_COOKIE_SAMESITE_FORCE_ALL = True
+
 # CMS base
 CMS_BASE = 'localhost:18010'
 
@@ -1319,7 +1344,7 @@ STATICI18N_OUTPUT_DIR = "js/i18n"
 
 
 # Localization strings (e.g. django.po) are under these directories
-def _make_locale_paths(settings):  # pylint: disable=missing-docstring
+def _make_locale_paths(settings):  # pylint: disable=missing-function-docstring
     locale_paths = [settings.REPO_ROOT + '/conf/locale']  # edx-platform/conf/locale/
     if settings.ENABLE_COMPREHENSIVE_THEMING:
         # Add locale paths to settings for comprehensive theming.
@@ -1333,7 +1358,8 @@ derived('LOCALE_PATHS')
 MESSAGE_STORAGE = 'django.contrib.messages.storage.session.SessionStorage'
 
 # Guidelines for translators
-TRANSLATORS_GUIDE = 'https://edx.readthedocs.org/projects/edx-developer-guide/en/latest/conventions/internationalization/i18n_translators_guide.html'  # pylint: disable=line-too-long
+TRANSLATORS_GUIDE = 'https://edx.readthedocs.org/projects/edx-developer-guide/en/latest/' \
+                    'conventions/internationalization/i18n_translators_guide.html'
 
 #################################### AWS #######################################
 # S3BotoStorage insists on a timeout for uploaded assets. We should make it
@@ -1471,11 +1497,18 @@ CREDIT_NOTIFICATION_CACHE_TIMEOUT = 5 * 60 * 60
 MIDDLEWARE = [
     'openedx.core.lib.x_forwarded_for.middleware.XForwardedForMiddleware',
 
+    # Avoid issue with https://blog.heroku.com/chrome-changes-samesite-cookie
+    # Override was found here https://github.com/django/django/pull/11894
+    'django_cookies_samesite.middleware.CookiesSameSite',
+
     'crum.CurrentRequestUserMiddleware',
 
     # A newer and safer request cache.
     'edx_django_utils.cache.middleware.RequestCacheMiddleware',
     'edx_django_utils.monitoring.middleware.MonitoringCustomMetricsMiddleware',
+
+    # Generate code ownership metrics. Keep this immediately after RequestCacheMiddleware.
+    'lms.djangoapps.monitoring.middleware.CodeOwnerMetricMiddleware',
 
     # Cookie monitoring
     'openedx.core.lib.request_utils.CookieMetricsMiddleware',
@@ -1814,18 +1847,6 @@ PIPELINE['STYLESHEETS'] = {
         ],
         'output_filename': 'css/lms-style-student-notes.css',
     },
-    'style-discussion-main': {
-        'source_filenames': [
-            'css/discussion/lms-discussion-main.css',
-        ],
-        'output_filename': 'css/discussion/lms-discussion-main.css',
-    },
-    'style-discussion-main-rtl': {
-        'source_filenames': [
-            'css/discussion/lms-discussion-main-rtl.css',
-        ],
-        'output_filename': 'css/discussion/lms-discussion-main-rtl.css',
-    },
     'style-inline-discussion': {
         'source_filenames': [
             'css/discussion/inline-discussion.css',
@@ -2064,7 +2085,8 @@ REQUIRE_JS_PATH_OVERRIDES = {
     'js/student_account/logistration_factory': 'js/student_account/logistration_factory.js',
     'js/courseware/courseware_factory': 'js/courseware/courseware_factory.js',
     'js/groups/views/cohorts_dashboard_factory': 'js/groups/views/cohorts_dashboard_factory.js',
-    'js/groups/discussions_management/discussions_dashboard_factory': 'js/discussions_management/views/discussions_dashboard_factory.js',  # pylint: disable=line-too-long
+    'js/groups/discussions_management/discussions_dashboard_factory':
+        'js/discussions_management/views/discussions_dashboard_factory.js',
     'draggabilly': 'js/vendor/draggabilly.js',
     'hls': 'common/js/vendor/hls.js'
 }
@@ -2097,6 +2119,7 @@ DEBUG_TOOLBAR_PATCH_SETTINGS = False
 # Tasks are only registered when the module they are defined in is imported.
 CELERY_IMPORTS = (
     'openedx.core.djangoapps.programs.tasks.v1.tasks',
+    'poll.tasks'
 )
 
 # Message configuration
@@ -2153,7 +2176,6 @@ CELERY_BROKER_TRANSPORT = 'amqp'
 CELERY_BROKER_HOSTNAME = 'localhost'
 CELERY_BROKER_USER = 'celery'
 CELERY_BROKER_PASSWORD = 'celery'
-CELERY_TIMEZONE = 'UTC'
 
 ################################ Block Structures ###################################
 
@@ -2544,6 +2566,12 @@ INSTALLED_APPS = [
     # Management of per-user schedules
     'openedx.core.djangoapps.schedules',
     'rest_framework_jwt',
+
+    # Monitoring utilities for LMS
+    'lms.djangoapps.monitoring.apps.MonitoringConfig',
+
+    # Learning Sequence Navigation
+    'openedx.core.djangoapps.content.learning_sequences.apps.LearningSequencesConfig',
 ]
 
 ######################### CSRF #########################################
@@ -2799,6 +2827,8 @@ REGISTRATION_FIELD_ORDER = [
     "gender",
     "year_of_birth",
     "level_of_education",
+    "specialty",
+    "profession"
     "company",
     "title",
     "mailing_address",
@@ -2835,6 +2865,8 @@ GRADES_DOWNLOAD_ROUTING_KEY = HIGH_MEM_QUEUE
 POLICY_CHANGE_GRADES_ROUTING_KEY = 'edx.lms.core.default'
 
 RECALCULATE_GRADES_ROUTING_KEY = 'edx.lms.core.default'
+
+SOFTWARE_SECURE_VERIFICATION_ROUTING_KEY = 'edx.lms.core.default'
 
 GRADES_DOWNLOAD = {
     'STORAGE_CLASS': 'django.core.files.storage.FileSystemStorage',
@@ -3161,10 +3193,8 @@ OPTIONAL_APPS = [
 for app_name, insert_before in OPTIONAL_APPS:
     # First attempt to only find the module rather than actually importing it,
     # to avoid circular references - only try to import if it can't be found
-    # by find_module, which doesn't work with import hooks
-    try:
-        imp.find_module(app_name)
-    except ImportError:
+    # by find_spec, which doesn't work with import hooks
+    if importlib.util.find_spec(app_name) is None:
         try:
             __import__(app_name)
         except ImportError:
@@ -3282,11 +3312,13 @@ ACCOUNT_VISIBILITY_CONFIGURATION["admin_fields"] = (
         "email",
         "extended_profile",
         "gender",
+        "state",
         "goals",
         "is_active",
         "mailing_address",
         "requires_parental_consent",
         "secondary_email",
+        "secondary_email_enabled",
         "year_of_birth",
         "phone_number",
     ]
@@ -3344,7 +3376,8 @@ FIELD_OVERRIDE_PROVIDERS = ()
 
 # Modulestore-level field override providers. These field override providers don't
 # require student context.
-MODULESTORE_FIELD_OVERRIDE_PROVIDERS = ('openedx.features.content_type_gating.field_override.ContentTypeGatingFieldOverride',)  # pylint: disable=line-too-long
+MODULESTORE_FIELD_OVERRIDE_PROVIDERS = ('openedx.features.content_type_gating.'
+                                        'field_override.ContentTypeGatingFieldOverride',)
 
 # PROFILE IMAGE CONFIG
 # WARNING: Certain django storage backends do not support atomic
@@ -3660,6 +3693,9 @@ DATA_CONSENT_SHARE_CACHE_TIMEOUT = 8 * 60 * 60  # 8 hours
 ENTERPRISE_MARKETING_FOOTER_QUERY_PARAMS = {}
 ENTERPRISE_TAGLINE = ''
 
+# List of enterprise customer uuids to exclude from transition to use of enterprise-catalog
+ENTERPRISE_CUSTOMERS_EXCLUDED_FROM_CATALOG = []
+
 ############## Settings for Course Enrollment Modes ######################
 # The min_price key refers to the minimum price allowed for an instance
 # of a particular type of course enrollment mode. This is not to be confused
@@ -3737,6 +3773,9 @@ COMPLETION_BY_VIEWING_DELAY_MS = 5000
 RATELIMIT_ENABLE = True
 RATELIMIT_RATE = '120/m'
 
+##### LOGISTRATION RATE LIMIT SETTINGS #####
+LOGISTRATION_RATELIMIT_RATE = '500/5m'
+
 ############### Settings for Retirement #####################
 RETIRED_USERNAME_PREFIX = 'retired__user_'
 RETIRED_EMAIL_PREFIX = 'retired__user_'
@@ -3789,7 +3828,7 @@ WRITABLE_GRADEBOOK_URL = None
 PROFILE_MICROFRONTEND_URL = None
 ORDER_HISTORY_MICROFRONTEND_URL = None
 ACCOUNT_MICROFRONTEND_URL = None
-PROGRAM_MANAGER_MICROFRONTEND_URL = None
+PROGRAM_CONSOLE_MICROFRONTEND_URL = None
 LEARNING_MICROFRONTEND_URL = None
 
 ############### Settings for the ace_common plugin #################
@@ -3842,6 +3881,7 @@ DEPRECATED_ADVANCED_COMPONENT_TYPES = []
 
 ############### Settings for video pipeline ##################
 VIDEO_UPLOAD_PIPELINE = {
+    'VEM_S3_BUCKET': '',
     'BUCKET': '',
     'ROOT_PATH': '',
 }
@@ -3887,3 +3927,6 @@ MICROSITE_CONFIGURATION = {}
 SYSLOG_SERVER = ''
 FEEDBACK_SUBMISSION_EMAIL = ''
 GITHUB_REPO_ROOT = '/edx/var/edxapp/data'
+
+##################### SUPPORT URL ############################
+SUPPORT_HOW_TO_UNENROLL_LINK = ''

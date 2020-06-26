@@ -65,6 +65,22 @@ class SupportViewManageUserTests(SupportViewTestCase):
         super(SupportViewManageUserTests, self).setUp()
         SupportStaffRole().add_users(self.user)
 
+    def test_get_contact_us(self):
+        """
+        Tests Support View contact us Page
+        """
+        url = reverse('support:contact_us')
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+
+    def test_get_password_assistance(self):
+        """
+        Tests password assistance
+        """
+        url = '/password_assistance'
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+
     def test_get_support_form(self):
         """
         Tests Support View to return Manage User Form
@@ -112,7 +128,6 @@ class SupportViewAccessTests(SupportViewTestCase):
         in itertools.product((
             'support:index',
             'support:certificates',
-            'support:refund',
             'support:enrollment',
             'support:enrollment_list',
             'support:manage_user',
@@ -140,7 +155,6 @@ class SupportViewAccessTests(SupportViewTestCase):
     @ddt.data(
         "support:index",
         "support:certificates",
-        "support:refund",
         "support:enrollment",
         "support:enrollment_list",
         "support:manage_user",
@@ -169,7 +183,6 @@ class SupportViewIndexTests(SupportViewTestCase):
 
     EXPECTED_URL_NAMES = [
         "support:certificates",
-        "support:refund",
         "support:link_program_enrollments",
     ]
 
@@ -308,7 +321,7 @@ class SupportViewEnrollmentsTests(SharedModuleStoreTestCase, SupportViewTestCase
         self.assert_enrollment(CourseMode.VERIFIED)
 
     @ddt.data(
-        ({}, r"The field \"'\w+'\" is required."),  # The double quoting goes away in Django 2.0.1
+        ({}, r"The field \w+ is required."),
         ({'course_id': 'bad course key'}, 'Could not parse course key.'),
         ({
             'course_id': 'course-v1:TestX+T101+2015',
@@ -334,10 +347,13 @@ class SupportViewEnrollmentsTests(SharedModuleStoreTestCase, SupportViewTestCase
         # `self` isn't available from within the DDT declaration, so
         # assign the course ID here
         if 'course_id' in data and data['course_id'] is None:
-            data['course_id'] = six.text_type(self.course.id)
+            data['course_id'] = str(self.course.id)
         response = self.client.post(self.url, data)
+
         self.assertEqual(response.status_code, 400)
-        self.assertIsNotNone(re.match(error_message, response.content.decode('utf-8')))
+        self.assertIsNotNone(
+            re.match(error_message, response.content.decode('utf-8').replace("'", '').replace('"', ''))
+        )
         self.assert_enrollment(CourseMode.AUDIT)
         self.assertIsNone(ManualEnrollmentAudit.get_manual_enrollment_by_email(self.student.email))
 
@@ -547,6 +563,74 @@ class SupportViewLinkProgramEnrollmentsTests(SupportViewTestCase):
         render_call_dict = mocked_render.call_args[0][1]
         assert render_call_dict['errors'] == [msg]
 
+    def _setup_user_from_username(self, username):
+        """
+        Setup a user from the passed in username.
+        If username passed in is falsy, return None
+        """
+        created_user = None
+        if username:
+            created_user = UserFactory(username=username, password=self.PASSWORD)
+        return created_user
+
+    def _setup_enrollments(self, external_user_key, linked_user=None):
+        """
+        Create enrollments for testing linking.
+        The enrollments can be create with already linked edX user.
+        """
+        program_enrollment = ProgramEnrollmentFactory.create(
+            external_user_key=external_user_key,
+            program_uuid=self.program_uuid,
+            user=linked_user
+        )
+        course_enrollment = None
+        if linked_user:
+            course_enrollment = CourseEnrollmentFactory.create(
+                course_id=self.course.id,
+                user=linked_user,
+                mode=CourseMode.MASTERS,
+                is_active=True
+            )
+        program_course_enrollment = ProgramCourseEnrollmentFactory.create(
+            program_enrollment=program_enrollment,
+            course_key=self.course.id,
+            course_enrollment=course_enrollment,
+            status='active'
+        )
+
+        return program_enrollment, program_course_enrollment
+
+    @ddt.data(
+        ('', None),
+        ('linked_user', None),
+        ('linked_user', 'original_user')
+    )
+    @ddt.unpack
+    @patch_render
+    def test_linking_program_enrollment(self, username, original_username, mocked_render):
+        external_user_key = '0001'
+        linked_user = self._setup_user_from_username(username)
+        original_user = self._setup_user_from_username(original_username)
+        program_enrollment, program_course_enrollment = self._setup_enrollments(
+            external_user_key,
+            original_user
+        )
+        self.client.post(self.url, data={
+            'program_uuid': self.program_uuid,
+            'text': external_user_key + ',' + username
+        })
+        render_call_dict = mocked_render.call_args[0][1]
+        if username:
+            expected_success = "('{}', '{}')".format(external_user_key, username)
+            assert render_call_dict['successes'] == [expected_success]
+            program_enrollment.refresh_from_db()
+            assert program_enrollment.user == linked_user
+            program_course_enrollment.refresh_from_db()
+            assert program_course_enrollment.course_enrollment.user == linked_user
+        else:
+            error = u"All linking lines must be in the format 'external_user_key,lms_username'"
+            assert render_call_dict['errors'] == [error]
+
 
 @ddt.ddt
 class ProgramEnrollmentsInspectorViewTests(SupportViewTestCase):
@@ -587,7 +671,9 @@ class ProgramEnrollmentsInspectorViewTests(SupportViewTestCase):
     def test_initial_rendering(self):
         response = self.client.get(self.url)
         content = six.text_type(response.content, encoding='utf-8')
-        expected_organization_serialized = '"orgKeys": {}'.format(json.dumps(self.org_key_list))
+        expected_organization_serialized = '"orgKeys": {}'.format(
+            json.dumps(sorted(self.org_key_list))
+        )
         assert response.status_code == 200
         assert expected_organization_serialized in content
         assert '"learnerInfo": {}' in content
@@ -609,11 +695,9 @@ class ProgramEnrollmentsInspectorViewTests(SupportViewTestCase):
                 uid='{0}:{1}'.format(org_key, external_user_key),
                 provider='tpa-saml'
             )
-            user_info['external_user_key'] = external_user_key
-            user_info['sso'] = {
-                'uid': user_social_auth.uid,
-                'provider': user_social_auth.provider
-            }
+            user_info['sso_list'] = [{
+                'uid': user_social_auth.uid
+            }]
         return user, user_info
 
     def _construct_enrollments(self, program_uuids, course_ids, external_user_key, edx_user=None):
@@ -678,7 +762,8 @@ class ProgramEnrollmentsInspectorViewTests(SupportViewTestCase):
             created_user
         )
         self.client.get(self.url, data={
-            'edx_user': created_user.username
+            'edx_user': created_user.username,
+            'org_key': self.org_key_list[0]
         })
         expected_info = {
             'user': expected_user_info,
@@ -693,7 +778,8 @@ class ProgramEnrollmentsInspectorViewTests(SupportViewTestCase):
     def test_search_username_user_not_connected(self, mocked_render):
         created_user, expected_user_info = self._construct_user('user_not_connected')
         self.client.get(self.url, data={
-            'edx_user': created_user.email
+            'edx_user': created_user.email,
+            'org_key': self.org_key_list[0]
         })
         expected_info = {
             'user': expected_user_info,
@@ -711,7 +797,8 @@ class ProgramEnrollmentsInspectorViewTests(SupportViewTestCase):
             self.external_user_key
         )
         self.client.get(self.url, data={
-            'edx_user': created_user.email
+            'edx_user': created_user.email,
+            'org_key': self.org_key_list[0]
         })
         expected_info = {
             'user': expected_user_info,
@@ -735,7 +822,8 @@ class ProgramEnrollmentsInspectorViewTests(SupportViewTestCase):
             created_user,
         )
         self.client.get(self.url, data={
-            'edx_user': created_user.email
+            'edx_user': created_user.email,
+            'org_key': self.org_key_list[0]
         })
         expected_info = {
             'user': expected_user_info,
@@ -757,7 +845,8 @@ class ProgramEnrollmentsInspectorViewTests(SupportViewTestCase):
             self.external_user_key,
         )
         self.client.get(self.url, data={
-            'edx_user': created_user.email
+            'edx_user': created_user.email,
+            'org_key': self.org_key_list[0]
         })
         expected_info = {
             'user': expected_user_info,
@@ -779,7 +868,8 @@ class ProgramEnrollmentsInspectorViewTests(SupportViewTestCase):
         }
 
         self.client.get(self.url, data={
-            'edx_user': created_user.email
+            'edx_user': created_user.email,
+            'org_key': self.org_key_list[0]
         })
 
         render_call_dict = mocked_render.call_args[0][1]
@@ -801,7 +891,7 @@ class ProgramEnrollmentsInspectorViewTests(SupportViewTestCase):
         id_verified = self._construct_id_verification(created_user)
         self.client.get(self.url, data={
             'external_user_key': self.external_user_key,
-            'IdPSelect': self.org_key_list[0]
+            'org_key': self.org_key_list[0]
         })
         expected_info = {
             'user': expected_user_info,
@@ -813,27 +903,27 @@ class ProgramEnrollmentsInspectorViewTests(SupportViewTestCase):
         assert expected_info == render_call_dict['learner_program_enrollments']
 
     @ddt.data(
-        ('aabbcc', ''),
-        ('', 'test_org')
+        ('', 'test_org'),
+        ('bad_key', '')
     )
     @ddt.unpack
     @patch_render
-    def test_search_external_key_no_idp(self, user_key_input, idp_input, mocked_render):
+    def test_search_no_external_user_key(self, user_key, org_key, mocked_render):
         self.client.get(self.url, data={
-            'external_user_key': user_key_input,
-            'IdPSelect': idp_input,
+            'external_user_key': user_key,
+            'org_key': org_key,
         })
 
-        expected_errors = [
+        expected_error = (
             "To perform a search, you must provide either the student's "
             "(a) edX username, "
             "(b) email address associated with their edX account, or "
             "(c) Identity-providing institution and external key!"
-        ]
+        )
 
         render_call_dict = mocked_render.call_args[0][1]
         assert {} == render_call_dict['learner_program_enrollments']
-        assert expected_errors == render_call_dict['errors']
+        assert expected_error == render_call_dict['error']
 
     @patch_render
     def test_search_external_user_not_connected(self, mocked_render):
@@ -844,9 +934,12 @@ class ProgramEnrollmentsInspectorViewTests(SupportViewTestCase):
         )
         self.client.get(self.url, data={
             'external_user_key': self.external_user_key,
-            'IdPSelect': self.org_key_list[0]
+            'org_key': self.org_key_list[0]
         })
         expected_info = {
+            'user': {
+                'external_user_key': self.external_user_key,
+            },
             'enrollments': expected_enrollments
         }
 
@@ -858,13 +951,11 @@ class ProgramEnrollmentsInspectorViewTests(SupportViewTestCase):
         external_user_key = 'not_in_system'
         self.client.get(self.url, data={
             'external_user_key': external_user_key,
-            'IdPSelect': self.org_key_list[0],
+            'org_key': self.org_key_list[0],
         })
 
-        expected_errors = [
-            'No user found for external key {} for institution {}'.format(
-                external_user_key, self.org_key_list[0]
-            )
-        ]
+        expected_error = 'No user found for external key {} for institution {}'.format(
+            external_user_key, self.org_key_list[0]
+        )
         render_call_dict = mocked_render.call_args[0][1]
-        assert expected_errors == render_call_dict['errors']
+        assert expected_error == render_call_dict['error']

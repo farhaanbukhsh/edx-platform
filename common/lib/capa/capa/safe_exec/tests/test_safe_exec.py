@@ -4,11 +4,11 @@
 import hashlib
 import os
 import os.path
-import random2 as random
 import textwrap
 import unittest
 
 import pytest
+import random2 as random
 import six
 from codejail.jail_code import is_configured
 from codejail.safe_exec import SafeExecException
@@ -199,7 +199,10 @@ class TestUpdateHash(unittest.TestCase):
 
         """
         d1 = {k: 1 for k in "abcdefghijklmnopqrstuvwxyz"}
-        d2 = dict(d1)
+        d2 = {k: 1 for k in "bcdefghijklmnopqrstuvwxyza"}
+        # TODO: remove the next lines once we are in python3.8
+        # since python3.8 dict preserve the order of insertion
+        # and therefore d2 and d1 keys are already in different order.
         for i in range(10000):
             d2[i] = 1
         for i in range(10000):
