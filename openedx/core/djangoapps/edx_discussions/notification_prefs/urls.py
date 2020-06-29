@@ -3,9 +3,7 @@ from django.conf.urls import url
 
 from . import views
 
-urlpatterns = []
-
-notification_prefs_urls = [
+urlpatterns = [
     url(r'^notification_prefs/enable/', views.ajax_enable),
     url(r'^notification_prefs/disable/', views.ajax_disable),
     url(r'^notification_prefs/status/', views.ajax_status),
@@ -23,6 +21,3 @@ notification_prefs_urls = [
         name='resubscribe_forum_update',
     ),
 ]
-
-if settings.FEATURES.get('ENABLE_FORUM_DAILY_DIGEST'):
-    urlpatterns += notification_prefs_urls

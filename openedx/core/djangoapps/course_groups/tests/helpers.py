@@ -9,6 +9,7 @@ from factory import Sequence, post_generation
 from factory.django import DjangoModelFactory
 from opaque_keys.edx.locator import CourseLocator
 
+import discussion.views
 from openedx.core.djangoapps.django_comment_common.models import CourseDiscussionSettings
 from openedx.core.djangoapps.django_comment_common.utils import set_course_discussion_settings
 from xmodule.modulestore import ModuleStoreEnum
@@ -86,7 +87,7 @@ def config_course_cohorts_legacy(
     Returns:
         Nothing -- modifies course in place.
     """
-    course.discussion_topics = {}
+    discussion.views.discussion_topics = {}
 
     config = {"cohorted": cohorted}
     if auto_cohort_groups is not None:

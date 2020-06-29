@@ -5,6 +5,7 @@ Utilities for tests within the django_comment_client module.
 
 from mock import patch
 
+import discussion.views
 from openedx.core.djangoapps.course_groups.tests.helpers import CohortFactory
 from openedx.core.djangoapps.django_comment_common.models import ForumsConfig, Role
 from openedx.core.djangoapps.django_comment_common.utils import (
@@ -54,8 +55,8 @@ class CohortedTestCase(ForumsEnableMixin, UrlResetMixin, SharedModuleStoreTestCa
                 }]
             })
         )
-        cls.course.discussion_topics["cohorted topic"] = {"id": "cohorted_topic"}
-        cls.course.discussion_topics["non-cohorted topic"] = {"id": "non_cohorted_topic"}
+        discussion.views.discussion_topics["cohorted topic"] = {"id": "cohorted_topic"}
+        discussion.views.discussion_topics["non-cohorted topic"] = {"id": "non_cohorted_topic"}
         fake_user_id = 1
         cls.store.update_item(cls.course, fake_user_id)
 
@@ -115,8 +116,8 @@ def config_course_discussions(
         division_scheme=CourseDiscussionSettings.COHORT,
     )
 
-    course.discussion_topics = dict((name, {"sort_key": "A", "id": to_id(name)})
-                                    for name in discussion_topics)
+    discussion.views.discussion_topics = dict((name, {"sort_key": "A", "id": to_id(name)})
+                                              for name in discussion_topics)
     try:
         # Not implemented for XMLModulestore, which is used by test_cohorts.
         modulestore().update_item(course, ModuleStoreEnum.UserID.test)

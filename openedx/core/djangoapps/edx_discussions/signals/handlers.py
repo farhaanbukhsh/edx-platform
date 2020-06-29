@@ -14,7 +14,9 @@ from lms.djangoapps.discussion import tasks
 from openedx.core.djangoapps.django_comment_common import signals
 from openedx.core.djangoapps.site_configuration.models import SiteConfiguration
 from openedx.core.djangoapps.theming.helpers import get_current_site
+from openedx.core.djangoapps.user_authn.views.register import REGISTER_USER
 from xmodule.modulestore.django import SignalHandler
+from ..models import create_comments_service_user
 
 log = logging.getLogger(__name__)
 
@@ -77,3 +79,9 @@ def send_message(comment, site):
         'site_id': site.id
     }
     tasks.send_ace_message.apply_async(args=[context])
+
+
+@receiver(REGISTER_USER)
+def create_synced_user(sender, user, registration, **kwargs):  # pylint: disable=unused-argument
+
+    create_comments_service_user(user)

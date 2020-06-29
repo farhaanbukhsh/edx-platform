@@ -55,7 +55,6 @@ from six.moves.urllib.parse import urlencode
 from slumber.exceptions import HttpClientError, HttpServerError
 from user_util import user_util
 
-import openedx.core.djangoapps.edx_discussions.comment_client as cc
 from course_modes.models import CourseMode, get_cosmetic_verified_display_price
 from lms.djangoapps.certificates.models import GeneratedCertificate
 from lms.djangoapps.courseware.models import (
@@ -2421,20 +2420,6 @@ def add_user_to_default_group(user, group):
     utg.users.add(User.objects.get(username=user))
     utg.save()
 
-
-def create_comments_service_user(user):
-    if not settings.FEATURES['ENABLE_DISCUSSION_SERVICE']:
-        # Don't try--it won't work, and it will fill the logs with lots of errors
-        return
-    try:
-        cc_user = cc.User.from_django_user(user)
-        cc_user.save()
-    except Exception:  # pylint: disable=broad-except
-        log = logging.getLogger("edx.discussion")  # pylint: disable=redefined-outer-name
-        log.error(
-            "Could not create comments service user with id {}".format(user.id),
-            exc_info=True
-        )
 
 # Define login and logout handlers here in the models file, instead of the views file,
 # so that they are more likely to be loaded when a Studio user brings up the Studio admin

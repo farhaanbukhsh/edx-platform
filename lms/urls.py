@@ -14,6 +14,7 @@ from ratelimitbackend import admin
 
 from branding import views as branding_views
 from debug import views as debug_views
+from discussion.views import course_discussions_settings_handler, discussion_topics
 from lms.djangoapps.certificates import views as certificates_views
 from lms.djangoapps.courseware.masquerade import MasqueradeView
 from lms.djangoapps.courseware.module_render import (
@@ -25,7 +26,6 @@ from lms.djangoapps.courseware.module_render import (
 from lms.djangoapps.courseware.views import views as courseware_views
 from lms.djangoapps.courseware.views.index import CoursewareIndex
 from lms.djangoapps.courseware.views.views import CourseTabView, EnrollStaffView, StaticCourseTabView
-from openedx.core.djangoapps.edx_discussions import views as discussion_views
 from lms.djangoapps.instructor.views import coupons as instructor_coupons_views
 from lms.djangoapps.instructor.views import instructor_dashboard as instructor_dashboard_views
 from lms.djangoapps.instructor.views import registration_codes as instructor_registration_codes_views
@@ -544,7 +544,7 @@ urlpatterns += [
         r'^courses/{}/discussions/settings$'.format(
             settings.COURSE_KEY_PATTERN,
         ),
-        discussion_views.course_discussions_settings_handler,
+        course_discussions_settings_handler,
         name='course_discussions_settings',
     ),
 
@@ -600,7 +600,7 @@ urlpatterns += [
         r'^courses/{}/discussion/topics$'.format(
             settings.COURSE_KEY_PATTERN,
         ),
-        discussion_views.discussion_topics,
+        discussion_topics,
         name='discussion_topics',
     ),
     url(
@@ -719,10 +719,7 @@ urlpatterns += [
 # discussion forums live within courseware, so courseware must be enabled first
 if settings.FEATURES.get('ENABLE_DISCUSSION_SERVICE'):
     urlpatterns += [
-        url(
-            r'^api/discussion/',
-            include('openedx.core.djangoapps.edx_discussions.rest_api.urls')
-        ),
+
         url(
             r'^courses/{}/discussion/'.format(
                 settings.COURSE_ID_PATTERN,

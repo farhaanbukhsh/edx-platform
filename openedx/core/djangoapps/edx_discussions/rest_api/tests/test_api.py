@@ -18,6 +18,7 @@ from rest_framework.exceptions import PermissionDenied
 from six.moves import range
 from six.moves.urllib.parse import parse_qs, urlencode, urlparse, urlunparse
 
+import discussion.views
 from common.test.utils import MockSignalHandlerMixin, disable_signal
 from lms.djangoapps.courseware.tests.factories import BetaTesterFactory, StaffFactory
 from lms.djangoapps.discussion.django_comment_client.tests.utils import ForumsEnableMixin
@@ -317,7 +318,7 @@ class GetCourseTopicsTest(ForumsEnableMixin, UrlResetMixin, ModuleStoreTestCase)
 
     def test_many(self):
         with self.store.bulk_operations(self.course.id, emit_signals=False):
-            self.course.discussion_topics = {
+            discussion.views.discussion_topics = {
                 "A": {"id": "non-courseware-1"},
                 "B": {"id": "non-courseware-2"},
             }
@@ -361,7 +362,7 @@ class GetCourseTopicsTest(ForumsEnableMixin, UrlResetMixin, ModuleStoreTestCase)
 
     def test_sort_key(self):
         with self.store.bulk_operations(self.course.id, emit_signals=False):
-            self.course.discussion_topics = {
+            discussion.views.discussion_topics = {
                 "W": {"id": "non-courseware-1", "sort_key": "Z"},
                 "X": {"id": "non-courseware-2"},
                 "Y": {"id": "non-courseware-3", "sort_key": "Y"},

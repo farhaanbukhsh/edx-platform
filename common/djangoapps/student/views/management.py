@@ -17,14 +17,14 @@ from django.contrib.sites.models import Site
 from django.core.validators import ValidationError, validate_email
 from django.db import transaction
 from django.db.models.signals import post_save
-from django.dispatch import Signal, receiver
+from django.dispatch import receiver
 from django.http import Http404, HttpResponse, HttpResponseBadRequest, HttpResponseForbidden
 from django.shortcuts import redirect
 from django.template.context_processors import csrf
 from django.urls import reverse
 from django.utils.translation import ugettext as _
-from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
-from django.views.decorators.http import require_GET, require_http_methods, require_POST
+from django.views.decorators.csrf import ensure_csrf_cookie
+from django.views.decorators.http import require_GET, require_POST
 from edx_ace import ace
 from edx_ace.recipient import Recipient
 from edx_django_utils import monitoring as monitoring_utils
@@ -59,13 +59,9 @@ from student.models import (
     PendingEmailChange,
     PendingSecondaryEmailChange,
     Registration,
-    RegistrationCookieConfiguration,
-    UserAttribute,
     UserProfile,
     UserSignupSource,
     UserStanding,
-    create_comments_service_user,
-    email_exists_or_retired
 )
 from student.signals import REFUND_ORDER
 from student.tasks import send_activation_email

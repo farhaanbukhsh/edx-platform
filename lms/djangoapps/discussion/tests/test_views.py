@@ -20,6 +20,7 @@ from mock import ANY, Mock, call, patch
 from six import text_type
 from six.moves import range
 
+import discussion.views
 from course_modes.models import CourseMode
 from course_modes.tests.factories import CourseModeFactory
 from lms.djangoapps.courseware.exceptions import CourseAccessRedirect
@@ -39,7 +40,8 @@ from lms.djangoapps.discussion.django_comment_client.tests.utils import (
     topic_name_to_id
 )
 from lms.djangoapps.discussion.django_comment_client.utils import strip_none
-from openedx.core.djangoapps.edx_discussions.views import _get_discussion_default_topic_id, course_discussions_settings_handler
+from openedx.core.djangoapps.edx_discussions.views import _get_discussion_default_topic_id
+from discussion.views import course_discussions_settings_handler
 from lms.djangoapps.teams.tests.factories import CourseTeamFactory, CourseTeamMembershipFactory
 from openedx.core.djangoapps.course_groups.models import CourseUserGroup
 from openedx.core.djangoapps.course_groups.tests.helpers import config_course_cohorts
@@ -154,7 +156,7 @@ def make_mock_thread_data(
         is_commentable_divided=None,
 ):
     data_commentable_id = (
-        commentable_id or course.discussion_topics.get('General', {}).get('id') or "dummy_commentable_id"
+        commentable_id or discussion.views.discussion_topics.get('General', {}).get('id') or "dummy_commentable_id"
     )
     thread_data = {
         "id": thread_id,
@@ -1578,7 +1580,7 @@ class InlineDiscussionUnicodeTestCase(ForumsEnableMixin, SharedModuleStoreTestCa
         request.user = self.student
 
         response = views.inline_discussion(
-            request, text_type(self.course.id), self.course.discussion_topics['General']['id']
+            request, text_type(self.course.id), discussion.views.discussion_topics['General']['id']
         )
         self.assertEqual(response.status_code, 200)
         response_data = json.loads(response.content.decode('utf-8'))
@@ -1905,7 +1907,7 @@ class CourseDiscussionTopicsTestCase(DividedDiscussionsTestCase):
         """
         Verify that we cannot access divide_discussion_topics if we're a non-staff user.
         """
-        self._verify_non_staff_cannot_access(views.discussion_topics, "GET", [six.text_type(self.course.id)])
+        self._verify_non_staff_cannot_access(discussion.views.discussion_topics, "GET", [six.text_type(self.course.id)])
 
     def test_get_discussion_topics(self):
         """
@@ -1914,7 +1916,7 @@ class CourseDiscussionTopicsTestCase(DividedDiscussionsTestCase):
         # create inline & course-wide discussion to verify the different map.
         self.create_divided_discussions()
 
-        response = self.get_handler(self.course, handler=views.discussion_topics)
+        response = self.get_handler(self.course, handler=discussion.views.discussion_topics)
         start_date = response['inline_discussions']['subcategories']['Chapter']['start_date']
         expected_response = {
             "course_wide_discussions": {
@@ -2011,14 +2013,14 @@ class CourseDiscussionsHandlerTestCase(DividedDiscussionsTestCase):
         config_course_cohorts(self.course, is_cohorted=True)
         config_course_discussions(self.course, discussion_topics=discussion_topics)
 
-        response = self.get_handler(self.course, handler=views.course_discussions_settings_handler)
+        response = self.get_handler(self.course, handler=discussion.views.course_discussions_settings_handler)
 
         expected_response = self.get_expected_response()
         self.assertEqual(response, expected_response)
 
         expected_response['divided_course_wide_discussions'] = [topic_name_to_id(self.course, "Topic B")]
         response = self.patch_handler(
-            self.course, data=expected_response, handler=views.course_discussions_settings_handler
+            self.course, data=expected_response, handler=discussion.views.course_discussions_settings_handler
         )
 
         self.assertEqual(response, expected_response)
@@ -2029,7 +2031,7 @@ class CourseDiscussionsHandlerTestCase(DividedDiscussionsTestCase):
         """
         config_course_cohorts(self.course, is_cohorted=True)
 
-        response = self.get_handler(self.course, handler=views.course_discussions_settings_handler)
+        response = self.get_handler(self.course, handler=discussion.views.course_discussions_settings_handler)
 
         expected_response = self.get_expected_response()
         self.assertEqual(response, expected_response)
@@ -2048,7 +2050,7 @@ class CourseDiscussionsHandlerTestCase(DividedDiscussionsTestCase):
 
         expected_response['divided_inline_discussions'] = ["Topic_A"]
         response = self.patch_handler(
-            self.course, data=expected_response, handler=views.course_discussions_settings_handler
+            self.course, data=expected_response, handler=discussion.views.course_discussions_settings_handler
         )
 
         self.assertEqual(response, expected_response)
@@ -2059,7 +2061,7 @@ class CourseDiscussionsHandlerTestCase(DividedDiscussionsTestCase):
         """
         divided_inline_discussions, divided_course_wide_discussions = self.create_divided_discussions()
 
-        response = self.get_handler(self.course, handler=views.course_discussions_settings_handler)
+        response = self.get_handler(self.course, handler=discussion.views.course_discussions_settings_handler)
         expected_response = self.get_expected_response()
 
         expected_response['divided_inline_discussions'] = [topic_name_to_id(self.course, name)
@@ -2079,7 +2081,7 @@ class CourseDiscussionsHandlerTestCase(DividedDiscussionsTestCase):
             self.course,
             data={'always_divide_inline_discussions': ''},
             expected_response_code=400,
-            handler=views.course_discussions_settings_handler
+            handler=discussion.views.course_discussions_settings_handler
         )
         self.assertEqual(
             u"Incorrect field type for `{}`. Type must be `{}`".format('always_divide_inline_discussions',
@@ -2090,7 +2092,7 @@ class CourseDiscussionsHandlerTestCase(DividedDiscussionsTestCase):
     def test_available_schemes(self):
         # Cohorts disabled, single enrollment mode.
         config_course_cohorts(self.course, is_cohorted=False)
-        response = self.get_handler(self.course, handler=views.course_discussions_settings_handler)
+        response = self.get_handler(self.course, handler=discussion.views.course_discussions_settings_handler)
         expected_response = self.get_expected_response()
         expected_response['available_division_schemes'] = []
         self.assertEqual(response, expected_response)
@@ -2098,13 +2100,13 @@ class CourseDiscussionsHandlerTestCase(DividedDiscussionsTestCase):
         # Add 2 enrollment modes
         CourseModeFactory.create(course_id=self.course.id, mode_slug=CourseMode.AUDIT)
         CourseModeFactory.create(course_id=self.course.id, mode_slug=CourseMode.VERIFIED)
-        response = self.get_handler(self.course, handler=views.course_discussions_settings_handler)
+        response = self.get_handler(self.course, handler=discussion.views.course_discussions_settings_handler)
         expected_response['available_division_schemes'] = [CourseDiscussionSettings.ENROLLMENT_TRACK]
         self.assertEqual(response, expected_response)
 
         # Enable cohorts
         config_course_cohorts(self.course, is_cohorted=True)
-        response = self.get_handler(self.course, handler=views.course_discussions_settings_handler)
+        response = self.get_handler(self.course, handler=discussion.views.course_discussions_settings_handler)
         expected_response['available_division_schemes'] = [
             CourseDiscussionSettings.COHORT, CourseDiscussionSettings.ENROLLMENT_TRACK
         ]

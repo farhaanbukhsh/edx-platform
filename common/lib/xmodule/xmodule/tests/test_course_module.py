@@ -15,6 +15,7 @@ from opaque_keys.edx.keys import CourseKey
 from pytz import utc
 from xblock.runtime import DictKeyValueStore, KvsFieldData
 
+import discussion.views
 from openedx.core.lib.teams_config import TeamsConfig, DEFAULT_COURSE_RUN_MAX_TEAM_SIZE
 import xmodule.course_module
 from xmodule.modulestore.xml import ImportSystem, XMLModuleStore
@@ -267,7 +268,8 @@ class DiscussionTopicsTestCase(unittest.TestCase):
 
     def test_default_discussion_topics(self):
         d = get_dummy_course('2012-12-02T12:00')
-        self.assertEqual({'General': {'id': 'i4x-test_org-test_course-course-test'}}, d.discussion_topics)
+        self.assertEqual({'General': {'id': 'i4x-test_org-test_course-course-test'}},
+                         discussion.views.discussion_topics)
 
 
 class TeamsConfigurationTestCase(unittest.TestCase):

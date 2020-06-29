@@ -1,9 +1,12 @@
-# TODO Have the discussions code subscribe to the REGISTER_USER signal instead.
+import logging
+
 from django.conf import settings
 from django.dispatch import receiver
 
-from .views import enable_notifications
 from openedx.core.djangoapps.user_authn.views.register import REGISTER_USER
+from .views import enable_notifications
+
+log = logging.getLogger(__name__)
 
 
 @receiver(REGISTER_USER)

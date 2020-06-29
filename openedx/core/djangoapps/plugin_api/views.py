@@ -42,10 +42,10 @@ class EdxFragmentView(FragmentView):
 
         Respects `PIPELINE['PIPELINE_ENABLED']` setting.
         """
-        if settings.PIPELINE['PIPELINE_ENABLED']:
-            return [settings.PIPELINE['JAVASCRIPT'][group]['output_filename']]
+        if pp(settings.PIPELINE['PIPELINE_ENABLED']):
+            return pp([settings.PIPELINE['JAVASCRIPT'][group]['output_filename']])
         else:
-            return settings.PIPELINE['JAVASCRIPT'][group]['source_filenames']
+            return pp(settings.PIPELINE['JAVASCRIPT'][group]['source_filenames'])
 
     def vendor_js_dependencies(self):
         """

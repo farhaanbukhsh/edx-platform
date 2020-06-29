@@ -16,6 +16,7 @@ from opaque_keys.edx.locator import CourseKey
 from rest_framework.exceptions import PermissionDenied
 from six.moves.urllib.parse import urlencode, urlunparse
 
+import discussion.views
 from lms.djangoapps.courseware.courses import get_course_with_access
 from lms.djangoapps.courseware.exceptions import CourseAccessRedirect
 from lms.djangoapps.discussion.django_comment_client.base.views import (
@@ -298,7 +299,7 @@ def get_non_courseware_topics(request, course_key, course, topic_ids):
     """
     non_courseware_topics = []
     existing_topic_ids = set()
-    sorted_topics = sorted(list(course.discussion_topics.items()), key=lambda item: item[1].get("sort_key", item[0]))
+    sorted_topics = sorted(list(discussion.views.discussion_topics.items()), key=lambda item: item[1].get("sort_key", item[0]))
     for name, entry in sorted_topics:
         if not topic_ids or entry['id'] in topic_ids:
             discussion_topic = DiscussionTopic(

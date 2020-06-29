@@ -16,6 +16,7 @@ from opaque_keys.edx.keys import CourseKey
 from pytz import UTC
 from six import text_type
 
+import discussion.views
 import lms.djangoapps.discussion.django_comment_client.utils as utils
 from course_modes.models import CourseMode
 from course_modes.tests.factories import CourseModeFactory
@@ -381,7 +382,7 @@ class CategoryMapTestCase(CategoryMapTestMixin, ModuleStoreTestCase):
             start=datetime.datetime(2012, 2, 3, tzinfo=UTC)
         )
         # Courses get a default discussion topic on creation, so remove it
-        self.course.discussion_topics = {}
+        discussion.views.discussion_topics = {}
         self.discussion_num = 0
         self.instructor = InstructorFactory(course_key=self.course.id)
         self.maxDiff = None  # pylint: disable=invalid-name
@@ -413,7 +414,7 @@ class CategoryMapTestCase(CategoryMapTestMixin, ModuleStoreTestCase):
         self.assert_category_map_equals({"entries": {}, "subcategories": {}, "children": []})
 
     def test_configured_topics(self):
-        self.course.discussion_topics = {
+        discussion.views.discussion_topics = {
             "Topic A": {"id": "Topic_A"},
             "Topic B": {"id": "Topic_B"},
             "Topic C": {"id": "Topic_C"}
@@ -878,7 +879,7 @@ class CategoryMapTestCase(CategoryMapTestMixin, ModuleStoreTestCase):
         )
 
     def test_sort_configured_topics_explicit(self):
-        self.course.discussion_topics = {
+        discussion.views.discussion_topics = {
             "Topic A": {"id": "Topic_A", "sort_key": "B"},
             "Topic B": {"id": "Topic_B", "sort_key": "C"},
             "Topic C": {"id": "Topic_C", "sort_key": "A"}
@@ -1013,7 +1014,7 @@ class CategoryMapTestCase(CategoryMapTestMixin, ModuleStoreTestCase):
         self.assertEqual(utils.get_discussion_categories_ids(self.course, self.user), [])
 
     def test_ids_configured_topics(self):
-        self.course.discussion_topics = {
+        discussion.views.discussion_topics = {
             "Topic A": {"id": "Topic_A"},
             "Topic B": {"id": "Topic_B"},
             "Topic C": {"id": "Topic_C"}
@@ -1038,7 +1039,7 @@ class CategoryMapTestCase(CategoryMapTestMixin, ModuleStoreTestCase):
         )
 
     def test_ids_mixed(self):
-        self.course.discussion_topics = {
+        discussion.views.discussion_topics = {
             "Topic A": {"id": "Topic_A"},
             "Topic B": {"id": "Topic_B"},
             "Topic C": {"id": "Topic_C"}

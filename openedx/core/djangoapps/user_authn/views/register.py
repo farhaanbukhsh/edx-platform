@@ -64,7 +64,6 @@ from student.helpers import (
 from student.models import (
     RegistrationCookieConfiguration,
     UserAttribute,
-    create_comments_service_user,
     email_exists_or_retired,
     username_exists_or_retired,
 )
@@ -222,14 +221,10 @@ def create_account_with_params(request, params):
 
     preferences_api.set_user_preference(user, LANGUAGE_KEY, get_language())
 
-
-
     _track_user_registration(user, profile, params, third_party_provider)
 
     # Announce registration
     REGISTER_USER.send(sender=None, user=user, registration=registration)
-
-    create_comments_service_user(user)
 
     try:
         _record_registration_attributions(request, new_user)

@@ -64,7 +64,7 @@ from .serializers import (
     DiscussionSettingsSerializer,
 )
 from .. import comment_client
-from ..views import get_divided_discussions
+from discussion.views import get_divided_discussions
 
 log = logging.getLogger(__name__)
 

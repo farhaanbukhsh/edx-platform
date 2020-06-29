@@ -37,7 +37,7 @@ from ..comment_client import (
     Thread,
     User as CommentClientUser,
 )
-from ..views import get_divided_discussions
+from discussion.views import get_divided_discussions
 
 
 def get_context(course, request, thread=None):

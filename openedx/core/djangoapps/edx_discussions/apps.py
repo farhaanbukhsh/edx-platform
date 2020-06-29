@@ -21,7 +21,7 @@ class DiscussionConfig(AppConfig):
         PluginURLs.CONFIG: {
             ProjectType.LMS: {
                 PluginURLs.NAMESPACE: u'',
-                PluginURLs.REGEX: r'^courses/{}/discussion/forum/'.format(COURSE_ID_PATTERN),
+                PluginURLs.REGEX: '',
                 PluginURLs.RELATIVE_PATH: u'urls',
             }
         },

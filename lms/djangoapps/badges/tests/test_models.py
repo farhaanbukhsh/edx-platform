@@ -3,6 +3,7 @@ Tests for the Badges app models.
 """
 
 
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.files.images import ImageFile
 from django.core.files.storage import default_storage
@@ -279,6 +280,8 @@ class ValidBadgeImageTest(TestCase):
         Verify that saving a valid badge image is no problem.
         """
         validate_badge_image(get_image('good'))
+        self.assertEqual(settings.MONKEY, 'rre')
+
 
     def test_unbalanced_image(self):
         """
