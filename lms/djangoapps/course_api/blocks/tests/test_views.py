@@ -6,9 +6,8 @@ Tests for Blocks Views
 from datetime import datetime
 from unittest import mock
 from unittest.mock import Mock
+from urllib.parse import urlencode, urlunparse
 
-import six
-from six.moves.urllib.parse import urlencode, urlunparse
 from django.urls import reverse
 from opaque_keys.edx.locator import CourseLocator
 
@@ -40,7 +39,7 @@ class TestBlocksView(SharedModuleStoreTestCase):
         cls.course_usage_key = cls.store.make_course_usage_key(cls.course_key)
 
         cls.non_orphaned_block_usage_keys = set(
-            six.text_type(item.location)
+            str(item.location)
             for item in cls.store.get_items(cls.course_key)
             # remove all orphaned items in the course, except for the root 'course' block
             if cls.store.get_parent_location(item.location) or item.category == 'course'
@@ -51,13 +50,14 @@ class TestBlocksView(SharedModuleStoreTestCase):
 
         # create and enroll user in the toy course
         self.user = UserFactory.create()
+        self.admin_user = AdminFactory.create()
         self.client.login(username=self.user.username, password='test')
         CourseEnrollmentFactory.create(user=self.user, course_id=self.course_key)
 
         # default values for url and query_params
         self.url = reverse(
             'blocks_in_block_tree',
-            kwargs={'usage_key_string': six.text_type(self.course_usage_key)}
+            kwargs={'usage_key_string': str(self.course_usage_key)}
         )
         self.query_params = {'depth': 'all', 'username': self.user.username}
 
@@ -79,7 +79,7 @@ class TestBlocksView(SharedModuleStoreTestCase):
         if params:
             self.query_params.update(params)
         response = self.client.get(url or self.url, self.query_params)
-        self.assertEqual(response.status_code, expected_status_code)
+        self.assertEqual(response.status_code, expected_status_code, str(response.content))
         return response
 
     def verify_response_block_list(self, response):
@@ -96,7 +96,7 @@ class TestBlocksView(SharedModuleStoreTestCase):
         Verify that the response contains the expected blocks
         """
         self.assertSetEqual(
-            set(six.iterkeys(response.data['blocks'])),
+            set(response.data['blocks'].keys()),
             self.non_orphaned_block_usage_keys,
         )
 
@@ -105,7 +105,7 @@ class TestBlocksView(SharedModuleStoreTestCase):
         Verify the response has the expected structure
         """
         self.verify_response_block_dict(response)
-        for block_key_string, block_data in six.iteritems(response.data['blocks']):
+        for block_key_string, block_data in response.data['blocks'].items():
             block_key = deserialize_usage_key(block_key_string, self.course_key)
             xblock = self.store.get_item(block_key)
 
@@ -118,7 +118,7 @@ class TestBlocksView(SharedModuleStoreTestCase):
 
             if xblock.has_children:
                 self.assertSetEqual(
-                    set(six.text_type(child.location) for child in xblock.get_children()),
+                    set(str(child.location) for child in xblock.get_children()),
                     set(block_data['children']),
                 )
 
@@ -174,7 +174,7 @@ class TestBlocksView(SharedModuleStoreTestCase):
         self.query_params['username'] = ''
         self.verify_response(403)
 
-    @mock.patch("course_api.blocks.forms.is_course_public", Mock(return_value=True))
+    @mock.patch("course_api.blocks.permissions.is_course_public", Mock(return_value=True))
     def test_not_authenticated_public_course_with_other_username(self):
         """
         Verify behaviour when accessing course blocks of a public course for another user anonymously.
@@ -182,7 +182,7 @@ class TestBlocksView(SharedModuleStoreTestCase):
         self.client.logout()
         self.verify_response(403)
 
-    @mock.patch("course_api.blocks.forms.is_course_public", Mock(return_value=True))
+    @mock.patch("course_api.blocks.permissions.is_course_public", Mock(return_value=True))
     def test_not_authenticated_public_course_with_all_blocks(self):
         """
         Verify behaviour when accessing all course blocks of a public course anonymously.
@@ -192,7 +192,7 @@ class TestBlocksView(SharedModuleStoreTestCase):
         self.query_params['all_blocks'] = True
         self.verify_response(403)
 
-    @mock.patch("course_api.blocks.forms.is_course_public", Mock(return_value=True))
+    @mock.patch("course_api.blocks.permissions.is_course_public", Mock(return_value=True))
     def test_not_authenticated_public_course_with_blank_username(self):
         """
         Verify behaviour when accessing course blocks of a public course for anonymous user anonymously.
@@ -208,7 +208,7 @@ class TestBlocksView(SharedModuleStoreTestCase):
         CourseEnrollment.unenroll(self.user, self.course_key)
         self.verify_response(403)
 
-    @mock.patch("course_api.blocks.forms.is_course_public", Mock(return_value=True))
+    @mock.patch("course_api.blocks.permissions.is_course_public", Mock(return_value=True))
     def test_not_enrolled_public_course(self):
         """
         Verify behaviour when accessing course blocks for a public course as a user not enrolled in course.
@@ -221,7 +221,7 @@ class TestBlocksView(SharedModuleStoreTestCase):
         usage_key = self.store.make_course_usage_key(CourseLocator('non', 'existent', 'course'))
         url = reverse(
             'blocks_in_block_tree',
-            kwargs={'usage_key_string': six.text_type(usage_key)}
+            kwargs={'usage_key_string': str(usage_key)}
         )
         self.verify_response(403, url=url)
 
@@ -235,16 +235,16 @@ class TestBlocksView(SharedModuleStoreTestCase):
         self.verify_response(400)
 
     def test_no_user_staff_all_blocks(self):
-        self.client.login(username=AdminFactory.create().username, password='test')
+        self.client.login(username=self.admin_user.username, password='test')
         self.query_params.pop('username')
         self.query_params['all_blocks'] = True
         self.verify_response()
 
     def test_basic(self):
         response = self.verify_response()
-        self.assertEqual(response.data['root'], six.text_type(self.course_usage_key))
+        self.assertEqual(response.data['root'], str(self.course_usage_key))
         self.verify_response_block_dict(response)
-        for block_key_string, block_data in six.iteritems(response.data['blocks']):
+        for block_key_string, block_data in response.data['blocks'].items():
             block_key = deserialize_usage_key(block_key_string, self.course_key)
             self.assertEqual(block_data['id'], block_key_string)
             self.assertEqual(block_data['type'], block_key.block_type)
@@ -257,7 +257,7 @@ class TestBlocksView(SharedModuleStoreTestCase):
     def test_block_counts_param(self):
         response = self.verify_response(params={'block_counts': ['course', 'chapter']})
         self.verify_response_block_dict(response)
-        for block_data in six.itervalues(response.data['blocks']):
+        for block_data in response.data['blocks'].values():
             self.assertEqual(
                 block_data['block_counts']['course'],
                 1 if block_data['type'] == 'course' else 0,
@@ -276,7 +276,7 @@ class TestBlocksView(SharedModuleStoreTestCase):
             'student_view_data': self.BLOCK_TYPES_WITH_STUDENT_VIEW_DATA + ['chapter']
         })
         self.verify_response_block_dict(response)
-        for block_data in six.itervalues(response.data['blocks']):
+        for block_data in response.data['blocks'].values():
             self.assert_in_iff(
                 'student_view_data',
                 block_data,
@@ -294,12 +294,13 @@ class TestBlocksView(SharedModuleStoreTestCase):
             - other_course_settings
             - course_visibility
         """
+        self.client.login(username=self.admin_user.username, password='test')
         response = self.verify_response(params={
             'all_blocks': True,
             'requested_fields': ['other_course_settings', 'course_visibility'],
         })
         self.verify_response_block_dict(response)
-        for block_data in six.itervalues(response.data['blocks']):
+        for block_data in response.data['blocks'].values():
             self.assert_in_iff(
                 'other_course_settings',
                 block_data,
@@ -325,12 +326,13 @@ class TestBlocksView(SharedModuleStoreTestCase):
             - other_course_settings
             - course_visibility
         """
+        self.client.login(username=self.admin_user.username, password='test')
         response = self.verify_response(params={
             'all_blocks': True,
             'requested_fields': ['course_visibility'],
         })
         self.verify_response_block_dict(response)
-        for block_data in six.itervalues(response.data['blocks']):
+        for block_data in response.data['blocks'].values():
             self.assertNotIn(
                 'other_course_settings',
                 block_data
@@ -345,7 +347,7 @@ class TestBlocksView(SharedModuleStoreTestCase):
     def test_navigation_param(self):
         response = self.verify_response(params={'nav_depth': 10})
         self.verify_response_block_dict(response)
-        for block_data in six.itervalues(response.data['blocks']):
+        for block_data in response.data['blocks'].values():
             self.assertIn('descendants', block_data)
 
     def test_requested_fields_param(self):
@@ -375,7 +377,7 @@ class TestBlocksInCourseView(TestBlocksView):
     def setUp(self):
         super(TestBlocksInCourseView, self).setUp()
         self.url = reverse('blocks_in_course')
-        self.query_params['course_id'] = six.text_type(self.course_key)
+        self.query_params['course_id'] = str(self.course_key)
 
     def test_no_course_id(self):
         self.query_params.pop('course_id')
@@ -385,4 +387,4 @@ class TestBlocksInCourseView(TestBlocksView):
         self.verify_response(400, params={'course_id': 'invalid_course_id'})
 
     def test_non_existent_course(self):
-        self.verify_response(403, params={'course_id': six.text_type(CourseLocator('non', 'existent', 'course'))})
+        self.verify_response(403, params={'course_id': str(CourseLocator('non', 'existent', 'course'))})

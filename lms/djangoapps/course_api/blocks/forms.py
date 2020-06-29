@@ -3,7 +3,6 @@ Course API Forms
 """
 
 
-import six
 from django.contrib.auth.models import AnonymousUser, User
 from django.core.exceptions import ValidationError
 from django.forms import CharField, ChoiceField, Form, IntegerField
@@ -12,10 +11,9 @@ from opaque_keys import InvalidKeyError
 from opaque_keys.edx.keys import UsageKey
 from rest_framework.exceptions import PermissionDenied
 
-from courseware.access_utils import is_course_public
-from courseware.courses import get_course_by_id
 from openedx.core.djangoapps.util.forms import ExtendedNullBooleanField, MultiValueField
 from xmodule.modulestore.django import modulestore
+
 from . import permissions
 
 
@@ -50,7 +48,7 @@ class BlockListGetForm(Form):
         try:
             return int(value)
         except ValueError:
-            raise ValidationError(u"'{}' is not a valid depth value.".format(value))
+            raise ValidationError("'{}' is not a valid depth value.".format(value))
 
     def clean_requested_fields(self):
         """
@@ -77,7 +75,7 @@ class BlockListGetForm(Form):
         try:
             usage_key = UsageKey.from_string(usage_key)
         except InvalidKeyError:
-            raise ValidationError(u"'{}' is not a valid usage key.".format(six.text_type(usage_key)))
+            raise ValidationError("'{}' is not a valid usage key.".format(str(usage_key)))
 
         return usage_key.replace(course_key=modulestore().fill_in_run(usage_key.course_key))
 
@@ -108,10 +106,23 @@ class BlockListGetForm(Form):
         return cleaned_data
 
     def clean_username(self):
+        """
+        Return cleaned username.
+
+        Overrides the default behaviour that maps an empty string to None. This
+        allows us to differentiate between no username being provided (None) vs
+        an empty username being provided ('').
+        """
+        # In case all_blocks is specified, ignore the username.
+        if self.cleaned_data.get('all_blocks', False):
+            return None
+
+        # See if 'username' was provided as a parameter in the raw data.
+        # If so, we return the already-cleaned version of that, otherwise we
+        # return None
         if 'username' in self.data:
             return self.cleaned_data['username']
-        else:
-            return None
+        return None
 
     def _clean_requested_user(self, cleaned_data, course_key):
         """
@@ -121,17 +132,14 @@ class BlockListGetForm(Form):
         requested_username = cleaned_data.get('username', None)
         all_blocks = cleaned_data.get('all_blocks', False)
 
-        if requested_username is not None and all_blocks:
-            raise ValidationError('The all_blocks and username options are mutually exclusive.')
-
         if requested_username is None and not all_blocks:
-            raise ValidationError({'username': [u"This field is required unless all_blocks is requested."]})
+            raise ValidationError({'username': ["This field is required unless all_blocks is requested."]})
 
         if requesting_user.is_anonymous:
             return self._verify_anonymous_user(requested_username, course_key, all_blocks)
 
-        if requested_username is None:
-            return self._verify_all_bocks(requesting_user, course_key)
+        if all_blocks:
+            return self._verify_all_blocks(requesting_user, course_key)
         elif requesting_user.username.lower() == requested_username.lower():
             return self._verify_requesting_user(requesting_user, course_key)
         else:
@@ -144,34 +152,40 @@ class BlockListGetForm(Form):
         """
         if all_blocks:
             raise PermissionDenied(
-                u"Anonymous users do not have permission to access all blocks in '{course_key}'."
-                .format(course_key=six.text_type(course_key))
+                "Anonymous users do not have permission to access all blocks in '{course_key}'.".format(
+                    course_key=str(course_key),
+                )
             )
 
-        if not username == '':
-            raise PermissionDenied(u"Anonymous users cannot access another user's blocks.")
+        # Check for '' and explicitly '' since the only valid option for anonymous users is
+        # an empty string that corresponds to an anonymous user.
+        if username != '':
+            raise PermissionDenied("Anonymous users cannot access another user's blocks.")
 
-        if not is_course_public(get_course_by_id(course_key, depth=0)):
+        if not permissions.is_course_public(course_key):
             raise PermissionDenied(
-                u"Course blocks for '{course_key}' cannot be accessed anonymously."
-                .format(course_key=course_key)
+                "Course blocks for '{course_key}' cannot be accessed anonymously.".format(
+                    course_key=course_key,
+                )
             )
 
         return AnonymousUser()
 
     @staticmethod
-    def _verify_all_bocks(requesting_user, course_key):
+    def _verify_all_blocks(requesting_user, course_key):  # pylint: disable=useless-return
         """
         Verifies form for when no username is specified, including permissions.
         """
         # Verify all blocks can be accessed for the course.
         if not permissions.can_access_all_blocks(requesting_user, course_key):
             raise PermissionDenied(
-                u"'{requesting_username}' does not have permission to access all blocks in '{course_key}'."
-                .format(requesting_username=requesting_user.username, course_key=six.text_type(course_key))
+                "'{requesting_username}' does not have permission to access all blocks in '{course_key}'.".format(
+                    requesting_username=requesting_user.username,
+                    course_key=str(course_key),
+                )
             )
 
-        # return None for user
+        return None
 
     @staticmethod
     def _verify_requesting_user(requesting_user, course_key):
@@ -180,8 +194,9 @@ class BlockListGetForm(Form):
         """
         if not permissions.can_access_self_blocks(requesting_user, course_key):
             raise PermissionDenied(
-                u"Course blocks for '{requesting_username}' cannot be accessed."
-                .format(requesting_username=requesting_user.username)
+                "Course blocks for '{requesting_username}' cannot be accessed.".format(
+                    requesting_username=requesting_user.username,
+                )
             )
         return requesting_user
 
@@ -193,14 +208,16 @@ class BlockListGetForm(Form):
         """
         # If accessing a public course, and requesting only content available publicly,
         # we can allow the request.
-        if is_course_public(get_course_by_id(course_key, depth=0)) and requested_username == '':
+        if requested_username == '' and permissions.is_course_public(course_key):
             return AnonymousUser()
 
         # Verify requesting user can access the user's blocks.
         if not permissions.can_access_others_blocks(requesting_user, course_key):
             raise PermissionDenied(
-                u"'{requesting_username}' does not have permission to access view for '{requested_username}'."
-                .format(requesting_username=requesting_user.username, requested_username=requested_username)
+                "'{requesting_username}' does not have permission to access view for '{requested_username}'.".format(
+                    requesting_username=requesting_user.username,
+                    requested_username=requested_username,
+                )
             )
 
         # Verify user exists.
@@ -208,5 +225,7 @@ class BlockListGetForm(Form):
             return User.objects.get(username=requested_username)
         except User.DoesNotExist:
             raise Http404(
-                u"Requested user '{requested_username}' does not exist.".format(requested_username=requested_username)
+                "Requested user '{requested_username}' does not exist.".format(
+                    requested_username=requested_username,
+                )
             )

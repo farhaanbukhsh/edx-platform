@@ -167,17 +167,3 @@ def check_public_access(course, visibilities):
         return ACCESS_GRANTED
 
     return ACCESS_DENIED
-
-
-def is_course_public(course):
-    """
-    This checks if a course is publicly accessible or not.
-
-    Arguments:
-        course (XBlock): The course descriptor.
-
-    Returns:
-        AccessResponse: Either ACCESS_GRANTED or ACCESS_DENIED.
-    """
-
-    return check_public_access(course, [COURSE_VISIBILITY_PUBLIC])
