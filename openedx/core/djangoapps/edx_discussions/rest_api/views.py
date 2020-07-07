@@ -19,7 +19,7 @@ from rest_framework.views import APIView
 from rest_framework.viewsets import ViewSet
 from six import text_type
 
-from lms.djangoapps.discussion.django_comment_client.utils import \
+from openedx.core.djangoapps.edx_discussions.django_comment_client.utils import \
     available_division_schemes
 from lms.djangoapps.instructor.access import update_forum_role
 from openedx.core.djangoapps.django_comment_common.models import Role

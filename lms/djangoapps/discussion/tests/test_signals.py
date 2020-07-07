@@ -7,7 +7,7 @@ import mock
 from django.test import TestCase
 from edx_django_utils.cache import RequestCache
 
-from openedx.core.djangoapps.edx_discussions.signals import ENABLE_FORUM_NOTIFICATIONS_FOR_SITE_KEY
+from openedx.core.djangoapps.edx_discussions.signals.handlers import ENABLE_FORUM_NOTIFICATIONS_FOR_SITE_KEY
 from openedx.core.djangoapps.django_comment_common import models, signals
 from openedx.core.djangoapps.site_configuration.tests.factories import SiteConfigurationFactory, SiteFactory
 from xmodule.modulestore.tests.django_utils import ModuleStoreTestCase

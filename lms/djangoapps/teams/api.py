@@ -11,7 +11,7 @@ from opaque_keys import InvalidKeyError
 from opaque_keys.edx.keys import CourseKey
 
 from course_modes.models import CourseMode
-from lms.djangoapps.discussion.django_comment_client.utils import has_discussion_privileges
+from openedx.core.djangoapps.edx_discussions.django_comment_client.utils import has_discussion_privileges
 from lms.djangoapps.teams.models import CourseTeam, CourseTeamMembership
 from openedx.core.lib.teams_config import TeamsetType
 from student.models import CourseEnrollment, anonymous_id_for_user

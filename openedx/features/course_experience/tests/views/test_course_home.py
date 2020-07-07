@@ -34,7 +34,7 @@ from lms.djangoapps.courseware.tests.factories import (
     OrgStaffFactory,
     StaffFactory
 )
-from lms.djangoapps.discussion.django_comment_client.tests.factories import RoleFactory
+from openedx.core.djangoapps.edx_discussions.django_comment_client import RoleFactory
 from openedx.features.discounts.applicability import get_discount_expiration_date
 from openedx.features.discounts.utils import format_strikeout_price, REV1008_EXPERIMENT_ID
 from openedx.core.djangoapps.content.course_overviews.models import CourseOverview
@@ -51,7 +51,6 @@ from openedx.core.djangolib.markup import HTML
 from openedx.features.course_duration_limits.models import CourseDurationLimitConfig
 from openedx.features.course_experience import (
     COURSE_ENABLE_UNENROLLED_ACCESS_FLAG,
-    RELATIVE_DATES_FLAG,
     SHOW_REVIEWS_TOOL_FLAG,
     SHOW_UPGRADE_MSG_ON_COURSE_HOME,
     UNIFIED_COURSE_TAB_FLAG

@@ -21,7 +21,7 @@ from six.moves.urllib.parse import parse_qs, urlencode, urlparse, urlunparse
 import discussion.views
 from common.test.utils import MockSignalHandlerMixin, disable_signal
 from lms.djangoapps.courseware.tests.factories import BetaTesterFactory, StaffFactory
-from lms.djangoapps.discussion.django_comment_client.tests.utils import ForumsEnableMixin
+from openedx.core.djangoapps.edx_discussions.django_comment_client.tests.utils import ForumsEnableMixin
 from openedx.core.djangoapps.course_groups.models import CourseUserGroupPartitionGroup
 from openedx.core.djangoapps.course_groups.tests.helpers import CohortFactory
 from openedx.core.djangoapps.django_comment_common.models import (

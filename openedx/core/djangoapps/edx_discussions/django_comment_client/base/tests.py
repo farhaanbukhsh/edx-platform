@@ -23,49 +23,63 @@ from six.moves import range
 from common.test.utils import MockSignalHandlerMixin, disable_signal
 from course_modes.models import CourseMode
 from course_modes.tests.factories import CourseModeFactory
-from lms.djangoapps.discussion.django_comment_client.base import views
-from lms.djangoapps.discussion.django_comment_client.tests.group_id import (
-    CohortedTopicGroupIdTestMixin,
-    GroupIdAssertionMixin,
-    NonCohortedTopicGroupIdTestMixin
+from lms.djangoapps.teams.tests.factories import (
+    CourseTeamFactory,
+    CourseTeamMembershipFactory,
 )
-from lms.djangoapps.discussion.django_comment_client.tests.unicode import UnicodeTestMixin
-from lms.djangoapps.discussion.django_comment_client.tests.utils import CohortedTestCase, ForumsEnableMixin
-from lms.djangoapps.teams.tests.factories import CourseTeamFactory, CourseTeamMembershipFactory
 from openedx.core.djangoapps.course_groups.cohorts import set_course_cohorted
 from openedx.core.djangoapps.course_groups.tests.helpers import CohortFactory
-from openedx.core.djangoapps.edx_discussions.comment_client import Thread
 from openedx.core.djangoapps.django_comment_common.models import (
-    FORUM_ROLE_STUDENT,
     CourseDiscussionSettings,
+    FORUM_ROLE_STUDENT,
     Role,
-    assign_role
+    assign_role,
 )
 from openedx.core.djangoapps.django_comment_common.utils import (
     ThreadContext,
     seed_permissions_roles,
-    set_course_discussion_settings
+    set_course_discussion_settings,
 )
+from openedx.core.djangoapps.edx_discussions.comment_client import Thread
 from openedx.core.djangoapps.waffle_utils.testutils import WAFFLE_TABLES
 from openedx.core.lib.teams_config import TeamsConfig
 from student.roles import CourseStaffRole, UserBasedRole
-from student.tests.factories import CourseAccessRoleFactory, CourseEnrollmentFactory, UserFactory
+from student.tests.factories import (
+    CourseAccessRoleFactory,
+    CourseEnrollmentFactory,
+    UserFactory,
+)
 from track.middleware import TrackMiddleware
 from track.views import segmentio
 from track.views.tests.base import SEGMENTIO_TEST_USER_ID, SegmentIOTrackingTestCaseBase
 from util.testing import UrlResetMixin
 from xmodule.modulestore import ModuleStoreEnum
 from xmodule.modulestore.django import modulestore
-from xmodule.modulestore.tests.django_utils import ModuleStoreTestCase, SharedModuleStoreTestCase
-from xmodule.modulestore.tests.factories import CourseFactory, ItemFactory, check_mongo_calls
-
+from xmodule.modulestore.tests.django_utils import (
+    ModuleStoreTestCase,
+    SharedModuleStoreTestCase,
+)
+from xmodule.modulestore.tests.factories import (
+    CourseFactory,
+    ItemFactory,
+    check_mongo_calls,
+)
 from .event_transformers import ForumThreadViewedEventTransformer
+from ..base import views
+from ..tests.group_id import (
+    CohortedTopicGroupIdTestMixin,
+    GroupIdAssertionMixin,
+    NonCohortedTopicGroupIdTestMixin,
+)
+from ..tests.unicode import UnicodeTestMixin
+from ..tests.utils import CohortedTestCase, ForumsEnableMixin
 
 log = logging.getLogger(__name__)
 
 CS_PREFIX = "http://localhost:4567/api/v1"
 
 QUERY_COUNT_TABLE_BLACKLIST = WAFFLE_TABLES
+
 
 # pylint: disable=missing-docstring
 

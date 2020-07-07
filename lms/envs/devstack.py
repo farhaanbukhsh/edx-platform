@@ -77,7 +77,7 @@ DJFS = {
 
 INSTALLED_APPS += ['debug_toolbar']
 MIDDLEWARE += [
-    'lms.djangoapps.discussion.django_comment_client.utils.QueryCountDebugMiddleware',
+    'openedx.core.djangoapps.edx_discussions.django_comment_client.utils.QueryCountDebugMiddleware',
     'debug_toolbar.middleware.DebugToolbarMiddleware',
 ]
 

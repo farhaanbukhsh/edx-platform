@@ -724,7 +724,7 @@ if settings.FEATURES.get('ENABLE_DISCUSSION_SERVICE'):
             r'^courses/{}/discussion/'.format(
                 settings.COURSE_ID_PATTERN,
             ),
-            include('lms.djangoapps.discussion.django_comment_client.urls')
+            include('openedx.core.djangoapps.edx_discussions.django_comment_client.urls')
         ),
     ]
 

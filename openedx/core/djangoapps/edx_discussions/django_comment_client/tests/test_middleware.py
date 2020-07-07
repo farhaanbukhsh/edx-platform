@@ -4,7 +4,7 @@ import django.http
 from django.test import TestCase
 from six import text_type
 
-import lms.djangoapps.discussion.django_comment_client.middleware as middleware
+import openedx.core.djangoapps.edx_discussions.middleware as middleware
 import openedx.core.djangoapps.edx_discussions.comment_client as comment_client
 
 

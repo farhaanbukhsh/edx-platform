@@ -20,17 +20,17 @@ from django.views.decorators.http import require_GET, require_POST
 from opaque_keys.edx.keys import CourseKey
 from six import text_type
 
-import lms.djangoapps.discussion.django_comment_client.settings as cc_settings
+import openedx.core.djangoapps.edx_discussions.django_comment_client.settings as cc_settings
 import openedx.core.djangoapps.edx_discussions.comment_client as cc
 from lms.djangoapps.courseware.access import has_access
 from lms.djangoapps.courseware.courses import get_course_by_id, get_course_overview_with_access, get_course_with_access
 from lms.djangoapps.courseware.exceptions import CourseAccessRedirect
-from lms.djangoapps.discussion.django_comment_client.permissions import (
+from ..permissions import (
     check_permissions_by_view,
     get_team,
     has_permission
 )
-from lms.djangoapps.discussion.django_comment_client.utils import (
+from ..utils import (
     JsonError,
     JsonResponse,
     add_courseware_context,

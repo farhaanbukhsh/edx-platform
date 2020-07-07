@@ -20,13 +20,13 @@ from six.moves import map
 
 from lms.djangoapps.courseware import courses
 from lms.djangoapps.courseware.access import has_access
-from lms.djangoapps.discussion.django_comment_client.constants import TYPE_ENTRY, TYPE_SUBCATEGORY
-from lms.djangoapps.discussion.django_comment_client.permissions import (
+from .constants import TYPE_ENTRY, TYPE_SUBCATEGORY
+from .permissions import (
     check_permissions_by_view,
     get_team,
     has_permission
 )
-from lms.djangoapps.discussion.django_comment_client.settings import MAX_COMMENT_DEPTH
+from .settings import MAX_COMMENT_DEPTH
 from openedx.core.djangoapps.course_groups.cohorts import get_cohort_id, get_cohort_names, is_course_cohorted
 from openedx.core.djangoapps.django_comment_common.models import (
     FORUM_ROLE_COMMUNITY_TA,

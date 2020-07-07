@@ -25,21 +25,21 @@ from course_modes.models import CourseMode
 from course_modes.tests.factories import CourseModeFactory
 from lms.djangoapps.courseware.exceptions import CourseAccessRedirect
 from openedx.core.djangoapps.edx_discussions import views
-from lms.djangoapps.discussion.django_comment_client.constants import TYPE_ENTRY, TYPE_SUBCATEGORY
-from lms.djangoapps.discussion.django_comment_client.permissions import get_team
-from lms.djangoapps.discussion.django_comment_client.tests.group_id import (
+from openedx.core.djangoapps.edx_discussions.django_comment_client.constants import TYPE_ENTRY, TYPE_SUBCATEGORY
+from openedx.core.djangoapps.edx_discussions.django_comment_client import get_team
+from openedx.core.djangoapps.edx_discussions.django_comment_client import (
     CohortedTopicGroupIdTestMixin,
     GroupIdAssertionMixin,
     NonCohortedTopicGroupIdTestMixin
 )
-from lms.djangoapps.discussion.django_comment_client.tests.unicode import UnicodeTestMixin
-from lms.djangoapps.discussion.django_comment_client.tests.utils import (
+from openedx.core.djangoapps.edx_discussions.django_comment_client.tests.unicode import UnicodeTestMixin
+from openedx.core.djangoapps.edx_discussions.django_comment_client.tests.utils import (
     CohortedTestCase,
     ForumsEnableMixin,
     config_course_discussions,
     topic_name_to_id
 )
-from lms.djangoapps.discussion.django_comment_client.utils import strip_none
+from openedx.core.djangoapps.edx_discussions.django_comment_client.utils import strip_none
 from openedx.core.djangoapps.edx_discussions.views import _get_discussion_default_topic_id
 from discussion.views import course_discussions_settings_handler
 from lms.djangoapps.teams.tests.factories import CourseTeamFactory, CourseTeamMembershipFactory

@@ -23,23 +23,10 @@ from opaque_keys.edx.keys import CourseKey
 from rest_framework import status
 from web_fragments.fragment import Fragment
 
-import lms.djangoapps.discussion.django_comment_client.utils as utils
+from .django_comment_client import utils
 from lms.djangoapps.courseware.access import has_access
 from lms.djangoapps.courseware.courses import get_course_with_access
 from lms.djangoapps.courseware.views.views import CourseTabView
-from lms.djangoapps.discussion.django_comment_client.base.views import \
-    track_thread_viewed_event
-from lms.djangoapps.discussion.django_comment_client.permissions import has_permission
-from lms.djangoapps.discussion.django_comment_client.utils import (
-    add_courseware_context,
-    course_discussion_division_enabled,
-    extract,
-    get_group_id_for_comments_service,
-    get_group_id_for_user,
-    get_group_names_by_id,
-    is_commentable_divided,
-    strip_none,
-)
 from lms.djangoapps.experiments.utils import get_experiment_user_metadata_context
 from lms.djangoapps.teams import api as team_api
 from openedx.core.djangoapps.django_comment_common.models import CourseDiscussionSettings
@@ -55,6 +42,18 @@ from xmodule.modulestore.django import modulestore
 from . import comment_client as cc
 from .comment_client import CommentClientMaintenanceError, CommentClientRequestError
 from .config.waffle import is_forum_daily_digest_enabled, use_bootstrap_flag_enabled
+from .django_comment_client.base.views import track_thread_viewed_event
+from .django_comment_client.permissions import has_permission
+from .django_comment_client.utils import (
+    add_courseware_context,
+    course_discussion_division_enabled,
+    extract,
+    get_group_id_for_comments_service,
+    get_group_id_for_user,
+    get_group_names_by_id,
+    is_commentable_divided,
+    strip_none,
+)
 from .exceptions import TeamDiscussionHiddenFromUserException
 
 log = logging.getLogger("edx.discussions")
@@ -163,7 +162,8 @@ def get_threads(request, course, user_info, discussion_id=None, per_page=THREADS
     # If not provided with a discussion id, filter threads by commentable ids
     # which are accessible to the current user.
     if discussion_id is None:
-        discussion_category_ids = set(utils.get_discussion_categories_ids(course, request.user))
+        discussion_category_ids = set(
+            utils.get_discussion_categories_ids(course, request.user))
         threads = [
             thread for thread in threads
             if thread.get('commentable_id') in discussion_category_ids

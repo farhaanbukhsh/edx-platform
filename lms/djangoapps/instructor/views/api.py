@@ -61,7 +61,7 @@ from lms.djangoapps.certificates.models import (
 from lms.djangoapps.courseware.access import has_access
 from lms.djangoapps.courseware.courses import get_course_by_id, get_course_with_access
 from lms.djangoapps.courseware.models import StudentModule
-from lms.djangoapps.discussion.django_comment_client.utils import (
+from openedx.core.djangoapps.edx_discussions.django_comment_client.utils import (
     get_course_discussion_settings,
     get_group_id_for_user,
     get_group_name,

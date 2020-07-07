@@ -30,7 +30,7 @@ from rest_framework.views import APIView
 from openedx.core.lib.api.authentication import BearerAuthentication
 
 from lms.djangoapps.courseware.courses import get_course_with_access, has_access
-from lms.djangoapps.discussion.django_comment_client.utils import has_discussion_privileges
+from openedx.core.djangoapps.edx_discussions.django_comment_client.utils import has_discussion_privileges
 from lms.djangoapps.teams.models import CourseTeam, CourseTeamMembership
 from openedx.core.lib.teams_config import TeamsetType
 from openedx.core.lib.api.parsers import MergePatchParser

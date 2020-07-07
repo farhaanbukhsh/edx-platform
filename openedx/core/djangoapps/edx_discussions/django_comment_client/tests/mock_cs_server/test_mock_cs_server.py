@@ -4,7 +4,7 @@ import unittest
 
 import pytest
 
-from lms.djangoapps.discussion.django_comment_client.tests.mock_cs_server.mock_cs_server import MockCommentServiceServer
+from openedx.core.djangoapps.edx_discussions.django_comment_client.tests.mock_cs_server import MockCommentServiceServer
 
 
 class MockCommentServiceServerTest(unittest.TestCase):

@@ -12,7 +12,7 @@ import six
 from django.test.client import RequestFactory
 from six.moves.urllib.parse import urlparse
 
-from lms.djangoapps.discussion.django_comment_client.tests.utils import ForumsEnableMixin
+from openedx.core.djangoapps.edx_discussions.django_comment_client.tests.utils import ForumsEnableMixin
 from openedx.core.djangoapps.course_groups.tests.helpers import CohortFactory
 from openedx.core.djangoapps.django_comment_common.models import (
     FORUM_ROLE_ADMINISTRATOR,

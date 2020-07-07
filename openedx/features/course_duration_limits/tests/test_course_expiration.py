@@ -14,7 +14,6 @@ from django.urls import reverse
 from django.utils.timezone import now
 
 from course_modes.models import CourseMode
-from experiments.models import ExperimentData
 from lms.djangoapps.courseware.tests.factories import (
     BetaTesterFactory,
     GlobalStaffFactory,
@@ -23,7 +22,7 @@ from lms.djangoapps.courseware.tests.factories import (
     OrgStaffFactory,
     StaffFactory
 )
-from lms.djangoapps.discussion.django_comment_client.tests.factories import RoleFactory
+from openedx.core.djangoapps.edx_discussions.django_comment_client import RoleFactory
 from openedx.core.djangoapps.content.course_overviews.models import CourseOverview
 from openedx.core.djangoapps.course_date_signals.utils import MAX_DURATION, MIN_DURATION
 from openedx.core.djangoapps.django_comment_common.models import (

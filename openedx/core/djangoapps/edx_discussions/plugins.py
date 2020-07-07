@@ -7,7 +7,7 @@ from django.conf import settings
 from django.utils.translation import ugettext_noop
 
 from lms.djangoapps.courseware.tabs import EnrolledTab
-from lms.djangoapps.discussion.django_comment_client import utils
+from .django_comment_client import utils
 from xmodule.tabs import TabFragmentViewMixin
 from .config.waffle import use_bootstrap_flag_enabled
 

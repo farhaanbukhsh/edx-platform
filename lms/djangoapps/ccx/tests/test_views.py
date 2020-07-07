@@ -34,7 +34,7 @@ from lms.djangoapps.ccx.tests.factories import CcxFactory
 from lms.djangoapps.ccx.tests.utils import CcxTestCase, flatten
 from lms.djangoapps.ccx.utils import ccx_course, is_email
 from lms.djangoapps.ccx.views import get_date
-from lms.djangoapps.discussion.django_comment_client.utils import has_forum_access
+from openedx.core.djangoapps.edx_discussions.django_comment_client.utils import has_forum_access
 from lms.djangoapps.grades.api import task_compute_all_grades_for_course
 from lms.djangoapps.instructor.access import allow_access, list_with_level
 from openedx.core.djangoapps.content.course_overviews.models import CourseOverview

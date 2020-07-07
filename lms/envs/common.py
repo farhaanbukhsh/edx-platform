@@ -1499,7 +1499,7 @@ MIDDLEWARE = [
 
     'mobile_api.middleware.AppVersionUpgrade',
     'openedx.core.djangoapps.header_control.middleware.HeaderControlMiddleware',
-    'lms.djangoapps.discussion.django_comment_client.middleware.AjaxExceptionMiddleware',
+    'openedx.core.djangoapps.edx_discussions.middleware.AjaxExceptionMiddleware',
     'django.middleware.common.CommonMiddleware',
 
     'django.contrib.sites.middleware.CurrentSiteMiddleware',
@@ -1549,7 +1549,7 @@ MIDDLEWARE = [
     # Must be after DarkLangMiddleware.
     'django.middleware.locale.LocaleMiddleware',
 
-    'lms.djangoapps.discussion.django_comment_client.utils.ViewNameMiddleware',
+    'openedx.core.djangoapps.edx_discussions.django_comment_client.utils.ViewNameMiddleware',
     'codejail.django_integration.ConfigureCodeJailMiddleware',
 
     # catches any uncaught RateLimitExceptions and returns a 403 instead of a 500

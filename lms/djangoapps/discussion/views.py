@@ -5,9 +5,9 @@ from django.views.decorators.http import require_http_methods
 from opaque_keys.edx.keys import CourseKey
 
 from courseware.courses import get_course_with_access
-from discussion.django_comment_client import utils as utils
-from discussion.django_comment_client.constants import TYPE_ENTRY
-from discussion.django_comment_client.utils import available_division_schemes
+from openedx.core.djangoapps.edx_discussions.django_comment_client import utils
+from openedx.core.djangoapps.edx_discussions.django_comment_client.constants import TYPE_ENTRY
+from openedx.core.djangoapps.edx_discussions.django_comment_client.utils import available_division_schemes
 from openedx.core.djangoapps.django_comment_common.utils import (
     get_course_discussion_settings,
     set_course_discussion_settings,

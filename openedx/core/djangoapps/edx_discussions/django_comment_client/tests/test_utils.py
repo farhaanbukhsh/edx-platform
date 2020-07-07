@@ -17,15 +17,15 @@ from pytz import UTC
 from six import text_type
 
 import discussion.views
-import lms.djangoapps.discussion.django_comment_client.utils as utils
+import openedx.core.djangoapps.edx_discussions.django_comment_client.utils as utils
 from course_modes.models import CourseMode
 from course_modes.tests.factories import CourseModeFactory
 from lms.djangoapps.courseware.tabs import get_course_tab_list
 from lms.djangoapps.courseware.tests.factories import InstructorFactory
-from lms.djangoapps.discussion.django_comment_client.constants import TYPE_ENTRY, TYPE_SUBCATEGORY
-from lms.djangoapps.discussion.django_comment_client.tests.factories import RoleFactory
-from lms.djangoapps.discussion.django_comment_client.tests.unicode import UnicodeTestMixin
-from lms.djangoapps.discussion.django_comment_client.tests.utils import config_course_discussions, topic_name_to_id
+from openedx.core.djangoapps.edx_discussions.django_comment_client.constants import TYPE_ENTRY, TYPE_SUBCATEGORY
+from openedx.core.djangoapps.edx_discussions.django_comment_client import RoleFactory
+from openedx.core.djangoapps.edx_discussions.django_comment_client.tests.unicode import UnicodeTestMixin
+from openedx.core.djangoapps.edx_discussions.django_comment_client.tests.utils import config_course_discussions, topic_name_to_id
 from lms.djangoapps.teams.tests.factories import CourseTeamFactory
 from openedx.core.djangoapps.course_groups import cohorts
 from openedx.core.djangoapps.course_groups.cohorts import set_course_cohorted
@@ -110,10 +110,13 @@ class AccessUtilsTestCase(ModuleStoreTestCase):
     def test_has_discussion_privileges(self):
         self.assertFalse(utils.has_discussion_privileges(self.student1, self.course_id))
         self.assertFalse(utils.has_discussion_privileges(self.student2, self.course_id))
-        self.assertFalse(utils.has_discussion_privileges(self.course_staff, self.course_id))
+        self.assertFalse(
+            utils.has_discussion_privileges(self.course_staff, self.course_id))
         self.assertTrue(utils.has_discussion_privileges(self.moderator, self.course_id))
-        self.assertTrue(utils.has_discussion_privileges(self.community_ta1, self.course_id))
-        self.assertTrue(utils.has_discussion_privileges(self.community_ta2, self.course_id))
+        self.assertTrue(
+            utils.has_discussion_privileges(self.community_ta1, self.course_id))
+        self.assertTrue(
+            utils.has_discussion_privileges(self.community_ta2, self.course_id))
 
     def test_has_forum_access(self):
         ret = utils.has_forum_access('student', self.course_id, 'Student')
@@ -343,7 +346,8 @@ class CachedDiscussionIdMapTestCase(ModuleStoreTestCase):
         self.assertFalse(utils.discussion_category_id_access(self.course, self.user, 'bad_discussion_id'))
 
     def test_missing_discussion_id_not_accessible(self):
-        self.assertFalse(utils.discussion_category_id_access(self.course, self.user, 'bogus_id'))
+        self.assertFalse(
+            utils.discussion_category_id_access(self.course, self.user, 'bogus_id'))
 
     def test_discussion_id_not_accessible_without_access(self):
         user = UserFactory.create()
@@ -1380,7 +1384,8 @@ class IsCommentableDividedTestCase(ModuleStoreTestCase):
 
         # Verify that team discussions are not cohorted, but other discussions are
         # if "always cohort inline discussions" is set to true.
-        self.assertFalse(utils.is_commentable_divided(course.id, team.discussion_topic_id))
+        self.assertFalse(
+            utils.is_commentable_divided(course.id, team.discussion_topic_id))
         self.assertTrue(utils.is_commentable_divided(course.id, "random"))
 
     def test_is_commentable_divided_cohorts(self):
@@ -1446,7 +1451,8 @@ class GroupIdForUserTestCase(ModuleStoreTestCase):
     def test_discussion_division_disabled(self):
         course_discussion_settings = get_course_discussion_settings(self.course.id)
         self.assertEqual(CourseDiscussionSettings.NONE, course_discussion_settings.division_scheme)
-        self.assertIsNone(utils.get_group_id_for_user(self.test_user, course_discussion_settings))
+        self.assertIsNone(
+            utils.get_group_id_for_user(self.test_user, course_discussion_settings))
 
     def test_discussion_division_by_cohort(self):
         set_discussion_division_settings(
@@ -1486,7 +1492,8 @@ class CourseDiscussionDivisionEnabledTestCase(ModuleStoreTestCase):
 
     def test_discussion_division_disabled(self):
         course_discussion_settings = get_course_discussion_settings(self.course.id)
-        self.assertFalse(utils.course_discussion_division_enabled(course_discussion_settings))
+        self.assertFalse(
+            utils.course_discussion_division_enabled(course_discussion_settings))
         self.assertEqual([], utils.available_division_schemes(self.course.id))
 
     def test_discussion_division_by_cohort(self):

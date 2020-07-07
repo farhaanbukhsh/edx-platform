@@ -17,8 +17,8 @@ from edx_ace.renderers import EmailRenderer
 from edx_ace.utils import date
 
 import openedx.core.djangoapps.edx_discussions.comment_client as cc
-from openedx.core.djangoapps.edx_discussions.signals import ENABLE_FORUM_NOTIFICATIONS_FOR_SITE_KEY
-from lms.djangoapps.discussion.tasks import _should_send_message, _track_notification_sent
+from openedx.core.djangoapps.edx_discussions.signals.handlers import ENABLE_FORUM_NOTIFICATIONS_FOR_SITE_KEY
+from openedx.core.djangoapps.edx_discussions.tasks import _should_send_message, _track_notification_sent
 from openedx.core.djangoapps.ace_common.template_context import get_base_template_context
 from openedx.core.djangoapps.content.course_overviews.tests.factories import CourseOverviewFactory
 from openedx.core.djangoapps.django_comment_common.models import ForumsConfig

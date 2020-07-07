@@ -9,7 +9,7 @@ from django.urls import reverse
 from rest_framework import serializers
 from six.moves.urllib.parse import urlencode, urlunparse
 
-from lms.djangoapps.discussion.django_comment_client.utils import (
+from openedx.core.djangoapps.edx_discussions.django_comment_client.utils import (
     course_discussion_division_enabled,
     get_group_id_for_user,
     get_group_name,

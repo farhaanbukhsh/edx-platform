@@ -11,9 +11,9 @@ from eventtracking.processors.exceptions import EventEmissionExit
 from opaque_keys import InvalidKeyError
 from opaque_keys.edx.locator import CourseLocator
 
-from lms.djangoapps.discussion.django_comment_client.base.views import add_truncated_title_to_event_data
-from lms.djangoapps.discussion.django_comment_client.permissions import get_team
-from lms.djangoapps.discussion.django_comment_client.utils import get_cached_discussion_id_map_by_course_id
+from .views import add_truncated_title_to_event_data
+from ..permissions import get_team
+from ..utils import get_cached_discussion_id_map_by_course_id
 from track.transformers import EventTransformer, EventTransformerRegistry
 from track.views.segmentio import BI_SCREEN_VIEWED_EVENT_NAME, FORUM_THREAD_VIEWED_EVENT_LABEL
 

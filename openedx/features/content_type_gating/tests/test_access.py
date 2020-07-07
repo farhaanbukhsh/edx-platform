@@ -18,12 +18,8 @@ from django.contrib.auth.models import User
 from mock import patch, Mock
 from pyquery import PyQuery as pq
 
-from six.moves.html_parser import HTMLParser
-
-from course_modes.models import CourseMode
 from course_api.blocks.api import get_blocks
 from course_modes.tests.factories import CourseModeFactory
-from experiments.models import ExperimentData, ExperimentKeyValue
 from lms.djangoapps.courseware.module_render import load_single_xblock
 from lms.djangoapps.courseware.tests.factories import (
     BetaTesterFactory,
@@ -33,13 +29,12 @@ from lms.djangoapps.courseware.tests.factories import (
     OrgStaffFactory,
     StaffFactory
 )
-from lms.djangoapps.discussion.django_comment_client.tests.factories import RoleFactory
+from openedx.core.djangoapps.edx_discussions.django_comment_client import RoleFactory
 from openedx.core.djangoapps.django_comment_common.models import (
     FORUM_ROLE_ADMINISTRATOR,
     FORUM_ROLE_COMMUNITY_TA,
     FORUM_ROLE_GROUP_MODERATOR,
-    FORUM_ROLE_MODERATOR,
-    Role
+    FORUM_ROLE_MODERATOR
 )
 from openedx.core.djangoapps.user_api.tests.factories import UserCourseTagFactory
 from openedx.core.djangoapps.util.testing import TestConditionalContent

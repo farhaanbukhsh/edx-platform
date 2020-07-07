@@ -6,7 +6,6 @@ Discussion XBlock
 import logging
 import six
 from six.moves import urllib
-from six.moves.urllib.parse import urlparse  # pylint: disable=import-error
 from django.contrib.staticfiles.storage import staticfiles_storage
 from django.urls import reverse
 from django.utils.translation import get_language_bidi
@@ -161,7 +160,7 @@ class DiscussionXBlock(XBlock, StudioEditableXBlockMixin, XmlParserMixin):
         :rtype: bool
         """
         # normal import causes the xmodule_assets command to fail due to circular import - hence importing locally
-        from lms.djangoapps.discussion.django_comment_client.permissions import has_permission
+        from openedx.core.djangoapps.edx_discussions.django_comment_client import has_permission
 
         return has_permission(self.django_user, permission, self.course_key)
 

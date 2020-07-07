@@ -24,7 +24,7 @@ from six import text_type  # pylint: disable=ungrouped-imports
 from six.moves.urllib.parse import urlparse, urlunparse  # pylint: disable=import-error
 from simple_history.models import HistoricalRecords
 
-from lms.djangoapps.discussion import django_comment_client
+from openedx.core.djangoapps.edx_discussions import django_comment_client
 from openedx.core.djangoapps.catalog.models import CatalogIntegration
 from openedx.core.djangoapps.lang_pref.api import get_closest_released_language
 from openedx.core.djangoapps.models.course_details import CourseDetails

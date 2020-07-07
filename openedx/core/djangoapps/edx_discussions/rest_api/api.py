@@ -19,12 +19,12 @@ from six.moves.urllib.parse import urlencode, urlunparse
 import discussion.views
 from lms.djangoapps.courseware.courses import get_course_with_access
 from lms.djangoapps.courseware.exceptions import CourseAccessRedirect
-from lms.djangoapps.discussion.django_comment_client.base.views import (
+from ..django_comment_client.base.views import (
     track_comment_created_event,
     track_thread_created_event,
     track_voted_event
 )
-from lms.djangoapps.discussion.django_comment_client.utils import (
+from ..django_comment_client.utils import (
     get_accessible_discussion_xblocks,
     get_group_id_for_user,
     is_commentable_divided
