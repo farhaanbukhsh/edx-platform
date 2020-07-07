@@ -1687,7 +1687,8 @@ discussion_js = (
     rooted_glob(PROJECT_ROOT / 'static', 'js/customwmd.js') +
     rooted_glob(PROJECT_ROOT / 'static', 'js/mathjax_accessible.js') +
     rooted_glob(PROJECT_ROOT / 'static', 'js/mathjax_delay_renderer.js') +
-    sorted(rooted_glob(COMMON_ROOT / 'static', 'common/js/discussion/**/*.js'))
+    #sorted(rooted_glob(COMMON_ROOT / 'static', 'common/js/discussion/**/*.js'))
+    sorted(rooted_glob(OPENEDX_ROOT / 'core/djangoapps/edx_discussions/static', 'common/js/discussion/**/*.js'))
 )
 
 discussion_vendor_js = [

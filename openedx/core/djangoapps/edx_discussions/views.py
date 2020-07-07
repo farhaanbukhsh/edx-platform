@@ -750,7 +750,7 @@ class DiscussionBoardFragmentView(EdxFragmentView):
             inline_js = render_to_string('discussion/discussion_board_js.template', context)
             fragment.add_javascript(inline_js)
             if not settings.REQUIRE_DEBUG:
-                fragment.add_javascript_url(staticfiles_storage.url('discussion/js/discussion_board_factory.js'))
+                fragment.add_javascript_url(staticfiles_storage.url('common/jd/discussion/discussion_board_factory.js'))
             return pp(fragment)
         except CommentClientMaintenanceError:
             log.warning('Forum is in maintenance mode')
@@ -784,7 +784,7 @@ class DiscussionBoardFragmentView(EdxFragmentView):
         works in conjunction with the Django pipeline to ensure that in development mode
         the files are loaded individually, but in production just the single bundle is loaded.
         """
-        return list(set(self.get_js_dependencies('discussion_vendor')))
+        return pp(list(set(self.get_js_dependencies('discussion_vendor'))))
 
     def js_dependencies(self):
         """
@@ -794,7 +794,7 @@ class DiscussionBoardFragmentView(EdxFragmentView):
         works in conjunction with the Django pipeline to ensure that in development mode
         the files are loaded individually, but in production just the single bundle is loaded.
         """
-        return self.get_js_dependencies('discussion')
+        return pp(self.get_js_dependencies('discussion'))
 
     def css_dependencies(self):
         """

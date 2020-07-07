@@ -11,8 +11,8 @@
             'common/js/discussion/models/discussion_course_settings',
             'common/js/discussion/models/discussion_user',
             'common/js/discussion/views/new_post_view',
-            'discussion/js/discussion_router',
-            'discussion/js/views/discussion_board_view'
+            'common/js/discussion/discussion_router',
+            'common/js/discussion/views/discussion_board_view'
         ],
         function($, Backbone, Content, Discussion, DiscussionUtil, DiscussionCourseSettings, DiscussionUser,
                  NewPostView, DiscussionRouter, DiscussionBoardView) {
