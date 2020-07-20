@@ -23,7 +23,10 @@ from ..models import (
     CourseSection, CourseSectionSequence, LearningContext, LearningSequence
 )
 from .permissions import can_see_all_content
+from .processors.content_gating import ContentGatingOutlineProcessor
+from .processors.milestones import MilestonesOutlineProcessor
 from .processors.schedule import ScheduleOutlineProcessor
+from .processors.special_exams import SpecialExamsOutlineProcessor
 from .processors.visibility import VisibilityOutlineProcessor
 
 User = get_user_model()
@@ -101,6 +104,7 @@ def get_course_outline(course_key: CourseKey) -> CourseOutlineData:
         title=learning_context.title,
         published_at=learning_context.published_at,
         published_version=learning_context.published_version,
+        entrance_exam_id=learning_context.entrance_exam_id,
         sections=sections_data,
     )
     TieredCache.set_all_tiers(cache_key, outline_data, 300)
@@ -153,10 +157,12 @@ def get_user_course_outline_details(course_key: CourseKey,
         course_key, user, at_time
     )
     schedule_processor = processors['schedule']
+    special_exams_processor = processors['special_exams']
 
     return UserCourseOutlineDetailsData(
         outline=user_course_outline,
-        schedule=schedule_processor.schedule_data(user_course_outline)
+        schedule=schedule_processor.schedule_data(user_course_outline),
+        special_exams=special_exams_processor.exam_data(user_course_outline)
     )
 
 
@@ -171,11 +177,12 @@ def _get_user_course_outline_and_processors(course_key: CourseKey,
     # released. These do not need to be run for staff users. This is where we
     # would add in pluggability for OutlineProcessors down the road.
     processor_classes = [
+        ('content_gating', ContentGatingOutlineProcessor),
+        ('milestones', MilestonesOutlineProcessor),
         ('schedule', ScheduleOutlineProcessor),
+        # ('special_exams', SpecialExamsOutlineProcessor),
         ('visibility', VisibilityOutlineProcessor),
         # Future:
-        # ('content_gating', ContentGatingOutlineProcessor),
-        # ('milestones', MilestonesOutlineProcessor),
         # ('user_partitions', UserPartitionsOutlineProcessor),
     ]
 
@@ -209,7 +216,14 @@ def _get_user_course_outline_and_processors(course_key: CourseKey,
         accessible_sequences=accessible_sequences,
         **{
             name: getattr(trimmed_course_outline, name)
-            for name in ['course_key', 'title', 'published_at', 'published_version', 'sections']
+            for name in [
+                'course_key',
+                'title',
+                'published_at',
+                'published_version',
+                'entrance_exam_id',
+                'sections'
+            ]
         }
     )
 
@@ -247,7 +261,8 @@ def _update_learning_context(course_outline: CourseOutlineData):
         defaults={
             'title': course_outline.title,
             'published_at': course_outline.published_at,
-            'published_version': course_outline.published_version
+            'published_version': course_outline.published_version,
+            'entrance_exam_id': course_outline.entrance_exam_id,
         }
     )
     if created:
@@ -317,6 +332,9 @@ def _update_course_section_sequences(course_outline: CourseOutlineData, learning
                 defaults={
                     'ordering': ordering,
                     'inaccessible_after_due': sequence_data.inaccessible_after_due,
+                    'is_practice_exam': sequence_data.exam.is_practice,
+                    'is_proctored_enabled': sequence_data.exam.is_proctored,
+                    'is_timed_exam': sequence_data.exam.is_timed,
                     'hide_from_toc': sequence_data.visibility.hide_from_toc,
                     'visible_to_staff_only': sequence_data.visibility.visible_to_staff_only,
                 },

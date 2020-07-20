@@ -60,6 +60,7 @@ class LearningContext(TimeStampedModel):
     title = models.CharField(max_length=255)
     published_at = models.DateTimeField(null=False)
     published_version = models.CharField(max_length=255)
+    entrance_exam_id = models.CharField(max_length=255, null=True)
 
     class Meta:
         indexes = [
@@ -120,6 +121,19 @@ class CourseContentVisibilityMixin(models.Model):
         abstract = True
 
 
+class CourseSequenceSpecialExamMixin(models.Model):
+    """
+    This mixin stores XBlock information that affects outline level information
+    pertaining to special exams
+    """
+    is_practice_exam = models.BooleanField(default=False)
+    is_proctored_enabled = models.BooleanField(default=False)
+    is_timed_exam = models.BooleanField(default=False)
+
+    class Meta:
+        abstract = True
+
+
 class CourseSection(CourseContentVisibilityMixin, TimeStampedModel):
     """
     Course Section data, mapping to the 'chapter' block type.
@@ -146,7 +160,7 @@ class CourseSection(CourseContentVisibilityMixin, TimeStampedModel):
         ]
 
 
-class CourseSectionSequence(CourseContentVisibilityMixin, TimeStampedModel):
+class CourseSectionSequence(CourseContentVisibilityMixin, CourseSequenceSpecialExamMixin, TimeStampedModel):
     """
     This is a join+ordering table, with entries that could get wiped out and
     recreated with every course publish. Do NOT make a ForeignKey against this

@@ -72,6 +72,7 @@ class CourseOutlineView(APIView):
                 "title": user_course_outline.title,
                 "published_at": user_course_outline.published_at,
                 "published_version": user_course_outline.published_version,
+                "entrance_exam_id": user_course_outline.entrance_exam_id,
 
                 # Who and when this request was generated for (we can eventually
                 # support arbitrary times).

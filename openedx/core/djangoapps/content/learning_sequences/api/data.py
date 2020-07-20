@@ -63,6 +63,19 @@ class VisibilityData:
 
 
 @attr.s(frozen=True)
+class ExamData:
+    """
+    XBlock attributes that describe exams
+    """
+    is_practice = attr.ib(type=bool, default=False)
+    is_proctored = attr.ib(type=bool, default=False)
+    is_timed = attr.ib(type=bool, default=False)
+
+    def __bool__(self):
+        return self.is_practice or self.is_proctored or self.is_timed
+
+
+@attr.s(frozen=True)
 class CourseLearningSequenceData:
     """
     A Learning Sequence (a.k.a. subsection) from a Course.
@@ -76,6 +89,7 @@ class CourseLearningSequenceData:
     title = attr.ib(type=str)
     visibility = attr.ib(type=VisibilityData)
 
+    exam = attr.ib(type=ExamData, default=None)
     inaccessible_after_due = attr.ib(type=bool, default=True)
 
 
@@ -131,6 +145,9 @@ class CourseOutlineData:
     # To make sure that our data structure is consistent, this field is
     # derived from what you pass into `sections`. Do not set this directly.
     sequences = attr.ib(type=Dict[UsageKey, CourseLearningSequenceData], init=False)
+
+    # Entrance Exam ID
+    entrance_exam_id = attr.ib(type=str)
 
     def __attrs_post_init__(self):
         """Post-init hook that validates and inits the `sequences` field."""
@@ -216,6 +233,14 @@ class ScheduleData:
 
 
 @attr.s(frozen=True)
+class SpecialExamAttemptData:
+    """
+    Overall special exam attempt data.
+    """
+    sequences = attr.ib(type=Dict[UsageKey, Dict])
+
+
+@attr.s(frozen=True)
 class UserCourseOutlineData(CourseOutlineData):
     """
     A course outline that has been customized for a specific user and time.
@@ -262,3 +287,4 @@ class UserCourseOutlineDetailsData:
     """
     outline = attr.ib(type=UserCourseOutlineData)
     schedule = attr.ib(type=ScheduleData)
+    special_exam_info = attr.ib(type=SpecialExamAttemptData)
