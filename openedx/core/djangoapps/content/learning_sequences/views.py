@@ -64,6 +64,7 @@ class CourseOutlineView(APIView):
             """
             user_course_outline = user_course_outline_details.outline
             schedule = user_course_outline_details.schedule
+            exam_information = user_course_outline_details.special_exam_attempts
             return {
                 # Top level course information
                 "course_key": str(user_course_outline.course_key),
@@ -90,6 +91,7 @@ class CourseOutlineView(APIView):
                         str(seq_usage_key): self._sequence_repr(
                             sequence,
                             schedule.sequences.get(seq_usage_key),
+                            exam_information.sequences.get(seq_usage_key, {}),
                             user_course_outline.accessible_sequences,
                         )
                         for seq_usage_key, sequence in user_course_outline.sequences.items()
@@ -97,7 +99,7 @@ class CourseOutlineView(APIView):
                 },
             }
 
-        def _sequence_repr(self, sequence, sequence_schedule, accessible_sequences):
+        def _sequence_repr(self, sequence, sequence_schedule, exam_information, accessible_sequences):
             """Representation of a Sequence."""
             if sequence_schedule is None:
                 schedule_item_dict = {'start': None, 'effective_start': None, 'due': None}
@@ -114,6 +116,7 @@ class CourseOutlineView(APIView):
                 "title": sequence.title,
                 "accessible": sequence.usage_key in accessible_sequences,
                 "inaccessible_after_due": sequence.inaccessible_after_due,
+                "exam_information": exam_information,
                 **schedule_item_dict,
             }
 

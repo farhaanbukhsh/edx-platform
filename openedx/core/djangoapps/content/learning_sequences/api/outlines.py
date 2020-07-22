@@ -162,7 +162,7 @@ def get_user_course_outline_details(course_key: CourseKey,
     return UserCourseOutlineDetailsData(
         outline=user_course_outline,
         schedule=schedule_processor.schedule_data(user_course_outline),
-        special_exams=special_exams_processor.exam_data(user_course_outline)
+        special_exam_attempts=special_exams_processor.exam_data(user_course_outline)
     )
 
 
@@ -180,7 +180,7 @@ def _get_user_course_outline_and_processors(course_key: CourseKey,
         ('content_gating', ContentGatingOutlineProcessor),
         ('milestones', MilestonesOutlineProcessor),
         ('schedule', ScheduleOutlineProcessor),
-        # ('special_exams', SpecialExamsOutlineProcessor),
+        ('special_exams', SpecialExamsOutlineProcessor),
         ('visibility', VisibilityOutlineProcessor),
         # Future:
         # ('user_partitions', UserPartitionsOutlineProcessor),

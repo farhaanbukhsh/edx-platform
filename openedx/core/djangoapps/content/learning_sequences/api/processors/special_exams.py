@@ -51,7 +51,6 @@ class SpecialExamsOutlineProcessor(OutlineProcessor):
         LearningSequences that the user can't see because it was hidden by a
         different OutlineProcessor.
         """
-
         sequences = {}
         if self.special_exams_enabled:
             for section in pruned_course_outline.sections:
@@ -65,8 +64,13 @@ class SpecialExamsOutlineProcessor(OutlineProcessor):
                             six.text_type(self.course_key),
                             six.text_type(sequence.usage_key)
                         )
-                    except ProctoredExamNotFoundException as ex:
-                        log.exception(ex)
+                    except ProctoredExamNotFoundException:
+                        log.info(
+                            'No exam found for {sequence_key} in {course_key}'.format(
+                                sequence_key=sequence.usage_key,
+                                course_key=self.course_key
+                            )
+                        )
 
                     if special_exam_attempt_context:
                         # Return exactly the same format as the edx_proctoring API response

@@ -287,4 +287,4 @@ class UserCourseOutlineDetailsData:
     """
     outline = attr.ib(type=UserCourseOutlineData)
     schedule = attr.ib(type=ScheduleData)
-    special_exam_info = attr.ib(type=SpecialExamAttemptData)
+    special_exam_attempts = attr.ib(type=SpecialExamAttemptData)
