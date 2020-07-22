@@ -3938,3 +3938,9 @@ SUPPORT_HOW_TO_UNENROLL_LINK = ''
 
 ######################## Setting for content libraries ########################
 MAX_BLOCKS_PER_CONTENT_LIBRARY = 1000
+
+
+####################### Settings for discussions #######################
+ENABLED_DISCUSSION_PROVIDERS = [
+    'cs_comments'
+]
