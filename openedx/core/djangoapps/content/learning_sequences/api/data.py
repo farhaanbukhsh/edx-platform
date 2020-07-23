@@ -89,7 +89,7 @@ class CourseLearningSequenceData:
     title = attr.ib(type=str)
     visibility = attr.ib(type=VisibilityData)
 
-    exam = attr.ib(type=ExamData, default=None)
+    exam = attr.ib(type=ExamData, default=ExamData())
     inaccessible_after_due = attr.ib(type=bool, default=True)
 
 

@@ -33,11 +33,11 @@ class SpecialExamsOutlineProcessor(OutlineProcessor):
         keys_to_remove = set()
         if not self.special_exams_enabled:
             for section in full_course_outline.sections:
-                if section.exam:
-                    keys_to_remove |= {
-                        seq.usage_key
-                        for seq in section.sequences
-                    }
+                keys_to_remove |= {
+                    seq.usage_key
+                    for seq in section.sequences
+                    if seq.exam
+                }
 
         return keys_to_remove
 

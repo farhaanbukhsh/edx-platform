@@ -3,12 +3,13 @@ Top level API tests. Tests API public contracts only. Do not import/create/mock
 models for this app.
 """
 from datetime import datetime, timezone
+from mock import patch
 
+import attr
 from django.contrib.auth.models import User, AnonymousUser
 from edx_when.api import set_dates_for_course
 from opaque_keys.edx.keys import CourseKey, UsageKey
 from opaque_keys.edx.locator import BlockUsageLocator
-import attr
 
 from openedx.core.djangolib.testing.utils import CacheIsolationTestCase
 from ..data import (
@@ -38,6 +39,7 @@ class CourseOutlineTestCase(CacheIsolationTestCase):
             title="Roundtrip Test Course!",
             published_at=datetime(2020, 5, 20, tzinfo=timezone.utc),
             published_version="5ebece4b69dd593d82fe2015",
+            entrance_exam_id=None,
             sections=generate_sections(cls.course_key, [2, 2]),
         )
 
@@ -131,6 +133,7 @@ class UserCourseOutlineTestCase(CacheIsolationTestCase):
             title="User Outline Test Course!",
             published_at=datetime(2020, 5, 20, tzinfo=timezone.utc),
             published_version="5ebece4b69dd593d82fe2020",
+            entrance_exam_id=None,
             sections=generate_sections(cls.course_key, [2, 1, 3])
         )
         replace_course_outline(cls.simple_outline)
@@ -158,16 +161,7 @@ class UserCourseOutlineTestCase(CacheIsolationTestCase):
         assert global_staff_outline_details.outline == global_staff_outline
 
 
-class ScheduleTestCase(CacheIsolationTestCase):
-    """
-    Schedule-specific Outline tests.
-
-    These aren't super-comprehensive with edge cases yet, partly because it's
-    still lacking a few important features (e.g. early beta releases, close-
-    after-due policy, etc.), and I'm not sure how we want to structure the
-    testing after all that's rolled up.
-    """
-
+class OutlineProcessorTestCase(CacheIsolationTestCase):
     @classmethod
     def setUpTestData(cls):
         # Users...
@@ -181,6 +175,121 @@ class ScheduleTestCase(CacheIsolationTestCase):
 
         cls.course_key = CourseKey.from_string("course-v1:OpenEdX+Outline+T1")
 
+        cls.all_seq_keys = []
+
+    def get_details(self, at_time):
+        staff_details = get_user_course_outline_details(self.course_key, self.global_staff, at_time)
+        student_details = get_user_course_outline_details(self.course_key, self.student, at_time)
+        return staff_details, student_details
+
+    @classmethod
+    def set_sequence_keys(cls, keys):
+        cls.all_seq_keys = keys
+
+    def get_sequence_keys(self, exclude=None):
+        if exclude is None:
+            exclude = []
+        if not isinstance(exclude, list):
+            raise TypeError("`exclude` must be a list of keys to be excluded")
+        return [key for key in self.all_seq_keys if key not in exclude]
+
+
+class ContentGatingTestCase(OutlineProcessorTestCase):
+    """
+    Content Gating specific outline tests
+    """
+
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+
+        # The UsageKeys we're going to set up for content gating tests.
+        cls.entrance_exam_section_key = cls.course_key.make_usage_key('chapter', 'entrance_exam')
+        cls.entrance_exam_seq_key = cls.course_key.make_usage_key('sequential', 'entrance_exam')
+        cls.gating_section_key = cls.course_key.make_usage_key('chapter', 'gating')
+        cls.gating_seq_key = cls.course_key.make_usage_key('sequential', 'gating')
+        cls.gated_section_key = cls.course_key.make_usage_key('chapter', 'gated')
+        cls.gated_seq_key = cls.course_key.make_usage_key('sequential', 'gated')
+
+        cls.set_sequence_keys([
+            cls.entrance_exam_seq_key,
+            cls.gating_seq_key,
+            cls.gated_seq_key,
+        ])
+
+        visibility = VisibilityData(
+            hide_from_toc=False,
+            visible_to_staff_only=False
+        )
+        cls.outline = CourseOutlineData(
+            course_key=cls.course_key,
+            title="User Outline Test Course!",
+            published_at=datetime(2020, 5, 20, tzinfo=timezone.utc),
+            published_version="5ebece4b69dd593d82fe2020",
+            entrance_exam_id=str(cls.entrance_exam_section_key),
+            sections=[
+                CourseSectionData(
+                    usage_key=cls.entrance_exam_section_key,
+                    title="Entrance Exam",
+                    visibility=visibility,
+                    sequences=[
+                        CourseLearningSequenceData(
+                            usage_key=cls.entrance_exam_seq_key,
+                            title='Entrance Exam',
+                            visibility=visibility
+                        ),
+                    ]
+                ),
+                CourseSectionData(
+                    usage_key=cls.gating_section_key,
+                    title="Gating Section",
+                    visibility=visibility,
+                    sequences=[
+                        CourseLearningSequenceData(
+                            usage_key=cls.gating_seq_key,
+                            title='Gating Sequence',
+                            visibility=visibility
+                        ),
+                    ]
+                ),
+                CourseSectionData(
+                    usage_key=cls.gated_section_key,
+                    title="Gated Section",
+                    visibility=visibility,
+                    sequences=[
+                        CourseLearningSequenceData(
+                            usage_key=cls.gated_seq_key,
+                            title='Gated Sequence',
+                            visibility=visibility
+                        ),
+                    ]
+                ),
+            ]
+        )
+        replace_course_outline(cls.outline)
+
+    @patch('openedx.core.djangoapps.content.learning_sequences.api.processors.content_gating.EntranceExamConfiguration.user_can_skip_entrance_exam')
+    def test_user_can_skip_entrance_exam(self, user_can_skip_entrance_exam_mock):
+        user_can_skip_entrance_exam_mock.return_value = True
+        staff_details, student_details = self.get_details(
+            datetime(2020, 5, 20, tzinfo=timezone.utc)
+        )
+
+
+class ScheduleTestCase(OutlineProcessorTestCase):
+    """
+    Schedule-specific Outline tests.
+
+    These aren't super-comprehensive with edge cases yet, partly because it's
+    still lacking a few important features (e.g. early beta releases, close-
+    after-due policy, etc.), and I'm not sure how we want to structure the
+    testing after all that's rolled up.
+    """
+
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+
         # The UsageKeys we're going to set up for date tests.
         cls.section_key = cls.course_key.make_usage_key('chapter', 'ch1')
         cls.seq_before_key = cls.course_key.make_usage_key('sequential', 'seq_before')
@@ -189,13 +298,13 @@ class ScheduleTestCase(CacheIsolationTestCase):
         cls.seq_inherit_key = cls.course_key.make_usage_key('sequential', 'seq_inherit')
         cls.seq_due_key = cls.course_key.make_usage_key('sequential', 'seq_due')
 
-        cls.all_seq_keys = [
+        cls.set_sequence_keys([
             cls.seq_before_key,
             cls.seq_same_key,
             cls.seq_after_key,
             cls.seq_inherit_key,
             cls.seq_due_key,
-        ]
+        ])
 
         # Set scheduling information into edx-when for a single Section with
         # sequences starting at various times.
@@ -249,6 +358,7 @@ class ScheduleTestCase(CacheIsolationTestCase):
             title="User Outline Test Course!",
             published_at=datetime(2020, 5, 20, tzinfo=timezone.utc),
             published_version="5ebece4b69dd593d82fe2020",
+            entrance_exam_id=None,
             sections=[
                 CourseSectionData(
                     usage_key=cls.section_key,
@@ -285,18 +395,6 @@ class ScheduleTestCase(CacheIsolationTestCase):
             ]
         )
         replace_course_outline(cls.outline)
-
-    def get_details(self, at_time):
-        staff_details = get_user_course_outline_details(self.course_key, self.global_staff, at_time)
-        student_details = get_user_course_outline_details(self.course_key, self.student, at_time)
-        return staff_details, student_details
-
-    def get_sequence_keys(self, exclude=None):
-        if exclude is None:
-            exclude = []
-        if not isinstance(exclude, list):
-            raise TypeError("`exclude` must be a list of keys to be excluded")
-        return [key for key in self.all_seq_keys if key not in exclude]
 
     def test_before_course_starts(self):
         staff_details, student_details = self.get_details(
@@ -416,6 +514,7 @@ class VisbilityTestCase(CacheIsolationTestCase):
             title="User Outline Test Course!",
             published_at=datetime(2020, 5, 20, tzinfo=timezone.utc),
             published_version="5ebece4b69dd593d82fe2020",
+            entrance_exam_id=None,
             sections=[
                 CourseSectionData(
                     usage_key=cls.normal_section_key,
