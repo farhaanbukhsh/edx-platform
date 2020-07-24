@@ -346,6 +346,101 @@ class ContentGatingTestCase(OutlineProcessorTestCase):
             assert key not in student_details.outline.accessible_sequences
 
 
+class MilestonesTestCase(OutlineProcessorTestCase):
+    """
+    Milestones specific outline tests
+    """
+
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+
+        # The UsageKeys we're going to set up for milestone tests.
+        cls.section_key = cls.course_key.make_usage_key('chapter', 'ch1')
+        cls.open_seq_key = cls.course_key.make_usage_key('sequential', 'open')
+        cls.milestone_required_seq_key = cls.course_key.make_usage_key('sequential', 'milestone_required')
+
+        cls.set_sequence_keys([
+            cls.open_seq_key,
+            cls.milestone_required_seq_key,
+        ])
+
+        set_dates_for_course(
+            cls.course_key,
+            [
+                (
+                    cls.course_key.make_usage_key('course', 'course'),
+                    {'start': datetime(2020, 5, 10, tzinfo=timezone.utc)}
+                ),
+                (
+                    cls.section_key,
+                    {'start': datetime(2020, 5, 15, tzinfo=timezone.utc)}
+                ),
+                (
+                    cls.open_seq_key,
+                    {'start': datetime(2020, 5, 15, tzinfo=timezone.utc)}
+                ),
+                (
+                    cls.milestone_required_seq_key,
+                    {'start': datetime(2020, 5, 15, tzinfo=timezone.utc)}
+                ),
+            ]
+        )
+
+        visibility = VisibilityData(
+            hide_from_toc=False,
+            visible_to_staff_only=False
+        )
+        cls.outline = CourseOutlineData(
+            course_key=cls.course_key,
+            title="User Outline Test Course!",
+            published_at=datetime(2020, 5, 20, tzinfo=timezone.utc),
+            published_version="5ebece4b69dd593d82fe2020",
+            entrance_exam_id=None,
+            sections=[
+                CourseSectionData(
+                    usage_key=cls.section_key,
+                    title="Chapter 1",
+                    visibility=visibility,
+                    sequences=[
+                        CourseLearningSequenceData(
+                            usage_key=cls.open_seq_key,
+                            title='Open Sequence',
+                            visibility=visibility
+                        ),
+                        CourseLearningSequenceData(
+                            usage_key=cls.milestone_required_seq_key,
+                            title='Milestone Required Sequence',
+                            visibility=visibility
+                        ),
+                    ]
+                ),
+            ]
+        )
+        replace_course_outline(cls.outline)
+
+    @patch('openedx.core.djangoapps.content.learning_sequences.api.processors.milestones.milestones_helpers.get_course_content_milestones')
+    def test_user_can_skip_entrance_exam(self, get_course_content_milestones_mock):
+        # Only return that there are milestones required for the
+        # milestones_required_seq_key usage key
+        def get_milestones_side_effect(_course_key, usage_key, _milestone_type, _user_id):
+            return usage_key == str(self.milestone_required_seq_key)
+
+        get_course_content_milestones_mock.side_effect = get_milestones_side_effect
+
+        staff_details, student_details = self.get_details(
+            datetime(2020, 5, 25, tzinfo=timezone.utc)
+        )
+
+        # Staff can always access all sequences
+        assert len(staff_details.outline.accessible_sequences) == 2
+
+        # Student can access only the open sequence, but not milestone required sequence
+        assert len(student_details.outline.accessible_sequences) == 1
+        assert self.open_seq_key in student_details.outline.accessible_sequences
+        assert self.milestone_required_seq_key not in student_details.outline.accessible_sequences
+
+
 class ScheduleTestCase(OutlineProcessorTestCase):
     """
     Schedule-specific Outline tests.
