@@ -206,16 +206,52 @@ class ContentGatingTestCase(OutlineProcessorTestCase):
         # The UsageKeys we're going to set up for content gating tests.
         cls.entrance_exam_section_key = cls.course_key.make_usage_key('chapter', 'entrance_exam')
         cls.entrance_exam_seq_key = cls.course_key.make_usage_key('sequential', 'entrance_exam')
-        cls.gating_section_key = cls.course_key.make_usage_key('chapter', 'gating')
-        cls.gating_seq_key = cls.course_key.make_usage_key('sequential', 'gating')
+        cls.open_section_key = cls.course_key.make_usage_key('chapter', 'open')
+        cls.open_seq_key = cls.course_key.make_usage_key('sequential', 'open')
         cls.gated_section_key = cls.course_key.make_usage_key('chapter', 'gated')
         cls.gated_seq_key = cls.course_key.make_usage_key('sequential', 'gated')
 
         cls.set_sequence_keys([
             cls.entrance_exam_seq_key,
-            cls.gating_seq_key,
+            cls.open_seq_key,
             cls.gated_seq_key,
         ])
+
+        cls.required_content = [str(cls.entrance_exam_section_key), str(cls.open_section_key)]
+
+        set_dates_for_course(
+            cls.course_key,
+            [
+                (
+                    cls.course_key.make_usage_key('course', 'course'),
+                    {'start': datetime(2020, 5, 10, tzinfo=timezone.utc)}
+                ),
+                (
+                    cls.entrance_exam_section_key,
+                    {'start': datetime(2020, 5, 15, tzinfo=timezone.utc)}
+                ),
+                (
+                    cls.entrance_exam_seq_key,
+                    {'start': datetime(2020, 5, 15, tzinfo=timezone.utc)}
+                ),
+                (
+                    cls.open_section_key,
+                    {'start': datetime(2020, 5, 15, tzinfo=timezone.utc)}
+                ),
+                (
+                    cls.open_seq_key,
+                    {'start': datetime(2020, 5, 15, tzinfo=timezone.utc)}
+                ),
+                (
+                    cls.gated_section_key,
+                    {'start': datetime(2020, 5, 15, tzinfo=timezone.utc)}
+                ),
+                (
+                    cls.gated_seq_key,
+                    {'start': datetime(2020, 5, 15, tzinfo=timezone.utc)}
+                ),
+            ]
+        )
 
         visibility = VisibilityData(
             hide_from_toc=False,
@@ -241,13 +277,13 @@ class ContentGatingTestCase(OutlineProcessorTestCase):
                     ]
                 ),
                 CourseSectionData(
-                    usage_key=cls.gating_section_key,
-                    title="Gating Section",
+                    usage_key=cls.open_section_key,
+                    title="Open Section",
                     visibility=visibility,
                     sequences=[
                         CourseLearningSequenceData(
-                            usage_key=cls.gating_seq_key,
-                            title='Gating Sequence',
+                            usage_key=cls.open_seq_key,
+                            title='Open Sequence',
                             visibility=visibility
                         ),
                     ]
@@ -268,12 +304,46 @@ class ContentGatingTestCase(OutlineProcessorTestCase):
         )
         replace_course_outline(cls.outline)
 
+
+    """
+    Currently returns all, and only, sequences in required content, not just the first.
+    This logic matches the existing transformer. Is this right?
+    """
+
     @patch('openedx.core.djangoapps.content.learning_sequences.api.processors.content_gating.EntranceExamConfiguration.user_can_skip_entrance_exam')
-    def test_user_can_skip_entrance_exam(self, user_can_skip_entrance_exam_mock):
+    @patch('openedx.core.djangoapps.content.learning_sequences.api.processors.content_gating.milestones_helpers.get_required_content')
+    def test_user_can_skip_entrance_exam(self, required_content_mock, user_can_skip_entrance_exam_mock):
+        required_content_mock.return_value = self.required_content
         user_can_skip_entrance_exam_mock.return_value = True
         staff_details, student_details = self.get_details(
-            datetime(2020, 5, 20, tzinfo=timezone.utc)
+            datetime(2020, 5, 25, tzinfo=timezone.utc)
         )
+
+        # Staff can always access all sequences
+        assert len(staff_details.outline.accessible_sequences) == 3
+
+        # Student can access only the entrance exam and gating sequence, but not gated sequence
+        assert len(student_details.outline.accessible_sequences) == 2
+        assert self.gated_seq_key not in student_details.outline.accessible_sequences
+        for key in self.get_sequence_keys(exclude=[self.gated_seq_key]):
+            assert key in student_details.outline.accessible_sequences
+
+    @patch('openedx.core.djangoapps.content.learning_sequences.api.processors.content_gating.EntranceExamConfiguration.user_can_skip_entrance_exam')
+    @patch('openedx.core.djangoapps.content.learning_sequences.api.processors.content_gating.milestones_helpers.get_required_content')
+    def test_user_can_not_skip_entrance_exam(self, required_content_mock, user_can_skip_entrance_exam_mock):
+        required_content_mock.return_value = self.required_content
+        user_can_skip_entrance_exam_mock.return_value = False
+        staff_details, student_details = self.get_details(
+            datetime(2020, 5, 25, tzinfo=timezone.utc)
+        )
+        # Staff can always access all sequences
+        assert len(staff_details.outline.accessible_sequences) == 3
+
+        # Student can access only the entrance exam sequence
+        assert len(student_details.outline.accessible_sequences) == 1
+        assert self.entrance_exam_seq_key in student_details.outline.accessible_sequences
+        for key in self.get_sequence_keys(exclude=[self.entrance_exam_seq_key]):
+            assert key not in student_details.outline.accessible_sequences
 
 
 class ScheduleTestCase(OutlineProcessorTestCase):

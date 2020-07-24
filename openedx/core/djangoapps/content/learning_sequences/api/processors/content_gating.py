@@ -33,7 +33,6 @@ class ContentGatingOutlineProcessor(OutlineProcessor):
             self.can_skip_entrance_exam = EntranceExamConfiguration.user_can_skip_entrance_exam(
                self.user, self.course_key
             )
-            log.warning(self.can_skip_entrance_exam)
 
     def inaccessible_sequences(self, full_course_outline):
         """
