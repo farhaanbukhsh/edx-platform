@@ -48,9 +48,9 @@ def elasticsearch_test(func):
     Decorator for tests which connect to elasticsearch when needed
     """
     if settings.SEARCH_ENGINE == "search.tests.mock_search_engine.MockSearchEngine":
-        return patch("openedx.core.djangoapps.content_libraries.libraries_index.ContentLibraryIndexer.SEARCH_KWARGS", new={})(func)
+        return patch("openedx.core.djangoapps.content_libraries.libraries_index.SearchIndexerBase.SEARCH_KWARGS", new={})(func)
     else:
-        return patch("openedx.core.djangoapps.content_libraries.libraries_index.ContentLibraryIndexer.SEARCH_KWARGS", new={
+        return patch("openedx.core.djangoapps.content_libraries.libraries_index.SearchIndexerBase.SEARCH_KWARGS", new={
             'refresh': 'wait_for'
         })(func)
 
