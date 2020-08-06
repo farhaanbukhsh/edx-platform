@@ -11,8 +11,10 @@ import unittest
 from django.conf import settings
 from organizations.models import Organization
 from rest_framework.test import APITestCase, APIClient
+from search.search_engine_base import SearchEngine
 
 from student.tests.factories import UserFactory
+from openedx.core.djangoapps.content_libraries.libraries_index import MAX_SIZE
 from openedx.core.djangolib.testing.utils import skip_unless_cms
 from openedx.core.lib import blockstore_api
 
@@ -48,7 +50,25 @@ def elasticsearch_test(func):
     Decorator for tests which connect to elasticsearch when needed
     """
     if settings.SEARCH_ENGINE == "search.tests.mock_search_engine.MockSearchEngine":
-        return patch("openedx.core.djangoapps.content_libraries.libraries_index.SearchIndexerBase.SEARCH_KWARGS", new={})(func)
+        @classmethod
+        def mock_perform(cls, filter_terms, text_search):
+            # pylint: disable=no-member
+            return SearchEngine.get_search_engine(cls.INDEX_NAME).search(
+                doc_type=cls.DOCUMENT_TYPE,
+                field_dictionary=filter_terms,
+                query_string=text_search,
+                size=MAX_SIZE
+            )
+
+        func = patch(
+            "openedx.core.djangoapps.content_libraries.libraries_index.SearchIndexerBase.SEARCH_KWARGS",
+            new={}
+        )(func)
+        func = patch(
+            "openedx.core.djangoapps.content_libraries.libraries_index.SearchIndexerBase._perform_elastic_search",
+            new=mock_perform
+        )(func)
+        return func
     else:
         return patch("openedx.core.djangoapps.content_libraries.libraries_index.SearchIndexerBase.SEARCH_KWARGS", new={
             'refresh': 'wait_for'
