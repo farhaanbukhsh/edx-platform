@@ -10,8 +10,14 @@ from django.conf import settings
 from django.contrib.auth.models import Group
 from django.test.utils import override_settings
 from mock import patch
+from search.search_engine_base import SearchEngine
 from organizations.models import Organization
 
+from openedx.core.djangoapps.content_libraries.libraries_index import (
+    MAX_SIZE,
+    ContentLibraryIndexer,
+    LibraryBlockIndexer
+)
 from openedx.core.djangoapps.content_libraries.tests.base import ContentLibrariesRestApiTest
 from openedx.core.djangoapps.content_libraries.api import BlockLimitReachedError
 from student.tests.factories import UserFactory
@@ -126,10 +132,21 @@ class ContentLibrariesTest(ContentLibrariesRestApiTest):
             self.assertEqual(result['next'], None)
 
     @ddt.data(True, False)
-    def test_library_filters(self, is_indexing_enabled):
+    @patch("openedx.core.djangoapps.content_libraries.libraries_index.ContentLibraryIndexer._perform_elastic_search")
+    def test_library_filters(self, is_indexing_enabled, mock_elastic_search):
         """
         Test the filters in the list libraries API
         """
+        def side_effect(filter_terms, text_search):
+            return SearchEngine.get_search_engine(ContentLibraryIndexer.INDEX_NAME).search(
+                doc_type=ContentLibraryIndexer.DOCUMENT_TYPE,
+                field_dictionary=filter_terms,
+                query_string=text_search,
+                size=MAX_SIZE
+            )
+
+        mock_elastic_search.side_effect = side_effect
+
         features = settings.FEATURES
         features['ENABLE_CONTENT_LIBRARY_INDEX'] = is_indexing_enabled
         with override_settings(FEATURES=features):
@@ -255,6 +272,7 @@ class ContentLibrariesTest(ContentLibrariesRestApiTest):
             lib = self._create_library(slug="list_blocks-slug" + str(is_indexing_enabled), title="Library 1")
             block1 = self._add_block_to_library(lib["id"], "problem", "problem1")
             block2 = self._add_block_to_library(lib["id"], "unit", "unit1")
+
             self._add_block_to_library(lib["id"], "problem", "problem2", parent_block=block2["id"])
 
             result = self._get_library_blocks(lib["id"])
@@ -278,10 +296,20 @@ class ContentLibrariesTest(ContentLibrariesRestApiTest):
             self.assertEqual(result['next'], None)
 
     @ddt.data(True, False)
-    def test_library_blocks_filters(self, is_indexing_enabled):
+    @patch("openedx.core.djangoapps.content_libraries.libraries_index.LibraryBlockIndexer._perform_elastic_search")
+    def test_library_blocks_filters(self, is_indexing_enabled, mock_elastic_search):
         """
         Test the filters in the list libraries API
         """
+        def side_effect(filter_terms, text_search):
+            return SearchEngine.get_search_engine(LibraryBlockIndexer.INDEX_NAME).search(
+                doc_type=LibraryBlockIndexer.DOCUMENT_TYPE,
+                field_dictionary=filter_terms,
+                query_string=text_search,
+                size=MAX_SIZE
+            )
+
+        mock_elastic_search.side_effect = side_effect
         features = settings.FEATURES
         features['ENABLE_CONTENT_LIBRARY_INDEX'] = is_indexing_enabled
         with override_settings(FEATURES=features):

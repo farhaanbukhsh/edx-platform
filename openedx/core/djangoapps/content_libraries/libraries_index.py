@@ -27,13 +27,6 @@ log = logging.getLogger(__name__)
 MAX_SIZE = 10000  # 10000 is the maximum records elastic is able to return in a single result. Defaults to 10.
 
 
-class ItemNotIndexedException(Exception):
-    """
-    Item wasn't indexed in ElasticSearch
-    """
-    pass
-
-
 class SearchIndexerBase(ABC):
     INDEX_NAME = None
     DOCUMENT_TYPE = None
@@ -56,59 +49,30 @@ class SearchIndexerBase(ABC):
         return searcher.index(cls.DOCUMENT_TYPE, items)
 
     @classmethod
-    def search(cls, **kwargs):
+    def get_items(cls, ids=None, filter_terms=None, text_search=None):
         """
-        Search the index with the given kwargs
+        Retrieve a list of items from the index.
+        Arguments:
+            ids - List of ids to be searched for in the index
+            filter_terms - Dictionary of filters to be applied
+            text_search - String which is used to do a text search in the supported indexes.
         """
-        searcher = SearchEngine.get_search_engine(cls.INDEX_NAME)
-        response = searcher.search(doc_type=cls.DOCUMENT_TYPE, field_dictionary=kwargs, size=MAX_SIZE)
-        return sorted(response["results"], key=lambda i: i['data']["id"])
-
-    @classmethod
-    def get_items(cls, ids, text_search=None):
-        """
-        Retrieve a list of items from the index
-        """
-        searcher = SearchEngine.get_search_engine(cls.INDEX_NAME)
-        ids_str = [str(i) for i in ids]
-
-        response = searcher.search(doc_type=cls.DOCUMENT_TYPE, field_dictionary={"id": ids_str}, size=MAX_SIZE)
-        if len(response["results"]) != len(ids_str):
-            missing = set(ids_str) - set([result["data"]["id"] for result in response["results"]])
-            raise ItemNotIndexedException("Keys not found in index: {}".format(missing))
+        if filter_terms is None:
+            filter_terms = {}
+        if ids is not None:
+            filter_terms = {
+                "id": [str(item) for item in ids],
+                **filter_terms
+            }
 
         if text_search:
-            # Elastic is hit twice if text_search is valid
-            # Once above to identify unindexed libraries, and now to filter with text_search
-            if isinstance(searcher, ElasticSearchEngine):
-                response = _translate_hits(searcher._es.search(
-                    doc_type=cls.DOCUMENT_TYPE,
-                    index=searcher.index_name,
-                    body=cls.build_elastic_query(ids_str, text_search),
-                    size=MAX_SIZE
-                ))
-            else:
-                # This is used only for running tests. TODO: Remove this and use elasticsearch in tests.
-                response = searcher.search(
-                    doc_type=cls.DOCUMENT_TYPE,
-                    field_dictionary={"id": ids_str},
-                    query_string=text_search,
-                    size=MAX_SIZE
-                )
+            response = cls._perform_elastic_search(filter_terms, text_search)
+        else:
+            searcher = SearchEngine.get_search_engine(cls.INDEX_NAME)
+            response = searcher.search(doc_type=cls.DOCUMENT_TYPE, field_dictionary=filter_terms, size=MAX_SIZE)
 
-        # Search results may not retain the original order of keys - we use this
-        # dict to construct a list in the original order of ids
-        response_dict = {
-            result["data"]["id"]: result["data"]
-            for result in response["results"]
-        }
-
-        return [
-            response_dict[key]
-            if key in response_dict
-            else None
-            for key in ids_str
-        ]
+        response = [result["data"] for result in response["results"]]
+        return sorted(response, key=lambda i: i["id"])
 
     @classmethod
     def remove_items(cls, ids):
@@ -136,8 +100,21 @@ class SearchIndexerBase(ABC):
         """
         return settings.FEATURES.get(cls.ENABLE_INDEXING_KEY, False)
 
+    @classmethod
+    def _perform_elastic_search(cls, filter_terms, text_search):
+        """
+        Build a query and search directly on elasticsearch
+        """
+        searcher = SearchEngine.get_search_engine(cls.INDEX_NAME)
+        return _translate_hits(searcher._es.search(
+            doc_type=cls.DOCUMENT_TYPE,
+            index=searcher.index_name,
+            body=cls.build_elastic_query(filter_terms, text_search),
+            size=MAX_SIZE
+        ))
+
     @staticmethod
-    def build_elastic_query(ids_str, text_search):
+    def build_elastic_query(filter_terms, text_search):
         """
         Build and return an elastic query for doing text search on a library
         """
@@ -145,6 +122,14 @@ class SearchIndexerBase(ABC):
         text_search_normalised = text_search.translate(text_search.maketrans('', '', RESERVED_CHARACTERS + '"'))
         # Wrap with asterix to enable partial matches
         text_search_normalised = "*{}*".format(text_search_normalised)
+        terms = [
+            {
+                'terms': {
+                    item: filter_terms[item]
+                }
+            }
+            for item in filter_terms
+        ]
         return {
             'query': {
                 'filtered': {
@@ -171,8 +156,8 @@ class SearchIndexerBase(ABC):
                         },
                     },
                     'filter': {
-                        'terms': {
-                            'id': ids_str
+                        'bool': {
+                            'must': terms
                         }
                     }
                 },
@@ -267,8 +252,10 @@ def index_library(sender, library_key, **kwargs):  # pylint: disable=unused-argu
         try:
             ContentLibraryIndexer.index_items([library_key])
             if kwargs.get('update_blocks', False):
-                blocks = LibraryBlockIndexer.search(library_key=str(library_key))
-                usage_keys = [LibraryUsageLocatorV2.from_string(block['data']['id']) for block in blocks]
+                blocks = LibraryBlockIndexer.get_items(filter_terms={
+                    'library_key': str(library_key)
+                })
+                usage_keys = [LibraryUsageLocatorV2.from_string(block['id']) for block in blocks]
                 LibraryBlockIndexer.index_items(usage_keys)
         except ConnectionError as e:
             log.exception(e)
@@ -282,8 +269,10 @@ def remove_library_index(sender, library_key, **kwargs):  # pylint: disable=unus
     if ContentLibraryIndexer.indexing_is_enabled():
         try:
             ContentLibraryIndexer.remove_items([library_key])
-            blocks = LibraryBlockIndexer.search(library_key=str(library_key))
-            LibraryBlockIndexer.remove_items([block['data']['id'] for block in blocks])
+            blocks = LibraryBlockIndexer.get_items(filter_terms={
+                'library_key': str(library_key)
+            })
+            LibraryBlockIndexer.remove_items([block['id'] for block in blocks])
         except ConnectionError as e:
             log.exception(e)
 

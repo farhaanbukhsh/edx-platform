@@ -58,11 +58,7 @@ from xblock.exceptions import XBlockNotFoundError
 
 from openedx.core.djangoapps.content_libraries import permissions
 from openedx.core.djangoapps.content_libraries.library_bundle import LibraryBundle
-from openedx.core.djangoapps.content_libraries.libraries_index import (
-    ContentLibraryIndexer,
-    LibraryBlockIndexer,
-    ItemNotIndexedException,
-)
+from openedx.core.djangoapps.content_libraries.libraries_index import ContentLibraryIndexer, LibraryBlockIndexer
 from openedx.core.djangoapps.content_libraries.models import ContentLibrary, ContentLibraryPermission
 from openedx.core.djangoapps.content_libraries.signals import (
     CONTENT_LIBRARY_CREATED,
@@ -247,9 +243,19 @@ def get_metadata_from_index(queryset, text_search=None):
     metadata = None
     if ContentLibraryIndexer.indexing_is_enabled():
         try:
-            library_keys = [lib.library_key for lib in queryset]
+            library_keys = [str(lib.library_key) for lib in queryset]
             metadata = ContentLibraryIndexer.get_items(library_keys, text_search=text_search)
-        except (ItemNotIndexedException, KeyError, ConnectionError) as e:
+            metadata_dict = {
+                item["id"]: item
+                for item in metadata
+            }
+            metadata = [
+                metadata_dict[key]
+                if key in metadata_dict
+                else None
+                for key in library_keys
+            ]
+        except (ConnectionError) as e:
             log.exception(e)
 
     # If ContentLibraryIndex is not available, we query blockstore for a limited set of metadata
@@ -512,26 +518,30 @@ def get_library_blocks(library_key, text_search=None):
     Returns a list of LibraryXBlockMetadata objects
     """
     metadata = None
-    ref = ContentLibrary.objects.get_by_key(library_key)
-    lib_bundle = LibraryBundle(library_key, ref.bundle_uuid, draft_name=DRAFT_NAME)
-    usages = lib_bundle.get_top_level_usages()
-
     if LibraryBlockIndexer.indexing_is_enabled():
         try:
+            filter_terms = {
+                'library_key': [str(library_key)],
+                'is_child': [False],
+            }
             metadata = [
                 {
                     **item,
                     "id": LibraryUsageLocatorV2.from_string(item['id']),
                 }
-                for item in LibraryBlockIndexer.get_items(usages, text_search=text_search)
+                for item in LibraryBlockIndexer.get_items(filter_terms=filter_terms, text_search=text_search)
                 if item is not None
             ]
-        except (ItemNotIndexedException, KeyError, ConnectionError) as e:
+        except (ConnectionError) as e:
             log.exception(e)
 
     # If indexing is disabled, or connection to elastic failed
     if metadata is None:
         metadata = []
+        ref = ContentLibrary.objects.get_by_key(library_key)
+        lib_bundle = LibraryBundle(library_key, ref.bundle_uuid, draft_name=DRAFT_NAME)
+        usages = lib_bundle.get_top_level_usages()
+
         for usage_key in usages:
             # For top-level definitions, we can go from definition key to usage key using the following, but this would not
             # work for non-top-level blocks as they may have multiple usages. Top level blocks are guaranteed to have only
@@ -744,6 +754,8 @@ def create_library_block_child(parent_usage_key, block_type, definition_id):
     include_data = XBlockInclude(link_id=None, block_type=block_type, definition_id=definition_id, usage_hint=None)
     parent_block.runtime.add_child_include(parent_block, include_data)
     parent_block.save()
+    ref = ContentLibrary.objects.get_by_key(parent_usage_key.context_key)
+    LIBRARY_BLOCK_UPDATED.send(sender=None, library_key=ref.library_key, usage_key=metadata.usage_key)
     return metadata
 
 
