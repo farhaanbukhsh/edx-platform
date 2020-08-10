@@ -9,7 +9,7 @@ var StringReplace = require('string-replace-webpack-plugin');
 var Merge = require('webpack-merge');
 
 var files = require('./webpack-config/file-lists.js');
-var xmoduleJS;
+var xmoduleJS = require('./common/static/xmodule/webpack.xmodule.config.js');
 
 var filesWithRequireJSBlocks = [
     path.resolve(__dirname, 'common/static/common/js/components/utils/view_utils.js'),
@@ -63,16 +63,6 @@ var workerConfig = function() {
         return null;
     }
 };
-
-// When running in the CI for checking code quality this file doesn't exist,
-// and its absense has a ripple effect of quality errors, so ignore if absent.
-try {
-    // eslint-disable-next-line global-require, import/no-unresolved
-    xmoduleJS = require('./common/static/xmodule/webpack.xmodule.config.js');
-} catch (error) {
-    xmoduleJS = {};
-}
-
 
 module.exports = Merge.smart({
     web: {
