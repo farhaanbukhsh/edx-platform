@@ -9,6 +9,7 @@ StackedConfigurationModel: A ConfigurationModel that can be overridden at site, 
 
 from collections import defaultdict
 from enum import Enum
+from typing import Optional, Tuple, Union
 
 import crum
 from config_models.models import ConfigurationModel, ConfigurationModelManager, cache
@@ -20,7 +21,7 @@ from django.db import models
 from django.db.models import Q
 from django.utils.translation import ugettext_lazy as _
 from opaque_keys.edx.django.models import LearningContextKeyField
-from opaque_keys.edx.keys import LearningContextKey
+from opaque_keys.edx.keys import CourseKey, LearningContextKey
 
 from openedx.core.djangoapps.content.course_overviews.models import CourseOverview
 from openedx.core.djangoapps.site_configuration.models import SiteConfiguration
@@ -59,41 +60,40 @@ class ConfigurationModelNoneToEmptyManager(ConfigurationModelManager):
         return NoneToEmptyQuerySet(self.model, using=self._db)
 
 
-def _org_from_org_course(org_course):
+def _org_from_org_course(org_course: str) -> str:
     """
     Returns the org part of a string formatted as org+course.
     """
     return org_course.partition('+')[0]
 
 
-def _org_course_from_course_key(course_key):
+def _org_course_from_course_key(course_key: CourseKey) -> str:
     """
     Returns the org+course string for a given course_key.
     """
-    return _org_course_from_context_key(course_key)[1]
+    return u"{}+{}".format(course_key.org, course_key.course)
 
 
-def _org_course_from_context_key(context_key):
+def _org_course_from_context_key(context_key: LearningContextKey) -> Tuple[Optional[str], Optional[str]]:
     """
     Returns the org and org_course from provided context_key.
 
     Arguments:
-        context_key (LearningContextKey): A learning context to derive the org and course from.
+        context_key: A learning context to derive the org and course from.
 
     Returns:
-        (str, str): The org and org_course for the context_key.
+        The org and org_course for the context_key.
 
     """
-    org = context_key.org
-    if context_key.is_course and context_key.org:
-        org_course = u"{}+{}".format(org, context_key.course)
+    org = getattr(context_key, 'org', None)
+    if isinstance(context_key, CourseKey) and context_key.org:
+        return org, _org_course_from_course_key(context_key)
     else:
-        org_course = None
-    return org, org_course
+        return org, None
 
 
 @request_cached()
-def _site_from_org(org):
+def _site_from_org(org: str) -> Union[Site, RequestSite]:
     configuration = SiteConfiguration.get_configuration_for_org(org, select_related=['site'])
     if configuration is None:
         try:
@@ -295,8 +295,10 @@ class StackedConfigurationModel(ConfigurationModel):
                         provenances[field.name] = Provenance.global_
 
         current = cls(**values)
-        current.provenances = {field.name: provenances[field.name] for field in
-                               stackable_fields}  # pylint: disable=attribute-defined-outside-init
+        current.provenances = {
+            field.name: provenances[field.name]
+            for field in stackable_fields
+        }  # pylint: disable=attribute-defined-outside-init
         cache.set(cache_key_name, current, cls.cache_timeout)
         return current
 
@@ -379,7 +381,7 @@ class StackedConfigurationModel(ConfigurationModel):
         return super(StackedConfigurationModel, cls).cache_key_name(site_id, org, org_course, course_key)
 
     def clean(self):
-        # fail validation if more than one of site/org/course are specified simultaneously
+        """ Ensure that only one of site, org, org_course, and course are specified simultaneously. """
         if len([arg for arg in [self.site, self.org, self.org_course, self.course] if arg is not None]) > 1:
             raise ValidationError(
                 _('Configuration may not be specified at more than one level at once.')
@@ -482,28 +484,28 @@ class CourseAppConfigOptionsModel(ConfigurationModel):
             MyCourseAppConfig.available()  # Only globally available configs
                 [ <internal_forum> ]
             MyCourseAppConfig.current(site=Site(domain='edx.org')) # Global configs and configs available for edx.org
-                [ <internal_forum>, <foruma> ]
+                [ <internal_forum>, <forum_a> ]
             MyCourseAppConfig.current(site=Site(domain='edx.org')) # Global configs only
-                [ <internal_forum>, <foruma> ]
+                [ <internal_forum>, <forum_a> ]
             MyCourseAppConfig.available(org='HarvardX') # Includes global and site-specific config options
-                [ <internal_forum>, <foruma>, <forumb> ]
+                [ <internal_forum>, <forum_a>, <forum_b> ]
             MyCourseAppConfig.available(org='MITx')  # Only includes global options
-                [ <internal_forum>, <foruma> ]
-            MyCourseAppConfig.current(org_course='HarvardX/CS50')
+                [ <internal_forum>, <forum_a> ]
+            MyCourseAppConfig.current(org_course='HarvardX+CS50')
                 # Includes global options, HarvardX's options and options for this specific course
-                [ <internal_forum>, <foruma>, <forumb>, <forumc> ]
+                [ <internal_forum>, <forum_a>, <forum_b>, <forum_c> ]
             MyCourseAppConfig.available(context_key=CourseKey(org='HarvardX', course='CS50', run='2018_Q1'))
                 # Includes global options, HarvardX's options and options for this specific course
-                [ <internal_forum>, <foruma>, <forumb>, <forumc> ]
+                [ <internal_forum>, <forum_a>, <forum_b>, <forum_c> ]
             MyCourseAppConfig.available(
                 context_key=CourseKey(org='HarvardX', course='CS50', run='2019_Q1')
             )
                 # Includes global options, HarvardX's options and options for this specific course
-                [ <internal_forum>, <foruma>, <forumb>, <forumc> ]
+                [ <internal_forum>, <forum_a>, <forum_b>, <forum_c> ]
             bio101 = CourseKey(org='HarvardX', course='Bio101', run='2018_Q1')
             MyCourseAppConfig.available(context_key=bio101)
                 # Includes global options, and HarvardX's options
-                [ <internal_forum>, <foruma>, <forumb> ]
+                [ <internal_forum>, <forum_a>, <forum_b> ]
 
         The following calls would result in errors due to overspecification:
 
@@ -535,7 +537,10 @@ class CourseAppConfigOptionsModel(ConfigurationModel):
         return cls.objects.current_set().filter(multi_filter_query).get()
 
     def clean(self):
-        # fail validation if more than one of site/org/course are specified simultaneously
+        """
+        Ensure that only one of site, org, org_course, and course are specified simultaneously and that the slug is not
+        reused across configurations.
+        """
         if len([arg for arg in [self.site, self.org, self.org_course, self.context_key] if arg]) > 1:
             raise ValidationError(
                 _('Configuration may not be specified at more than one level at once.')
