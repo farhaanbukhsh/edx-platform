@@ -10,7 +10,7 @@ from opaque_keys.edx.locator import BlockUsageLocator
 from pytz import UTC
 from xblock.fields import ScopeIds
 
-from xmodule.randomize_module import RandomizeModule
+from xmodule.randomize_module import RandomizeBlock
 
 from .test_course_module import DummySystem as DummyImportSystem
 
@@ -98,7 +98,7 @@ class RandomizeModuleTestCase(unittest.TestCase):
         self.assertEqual(len(randomize_descriptor.get_children()), 2)
 
         # Call RandomizeModule which will select an element from the list of available items
-        randomize_module = RandomizeModule(
+        randomize_module = RandomizeBlock(
             randomize_descriptor,
             self.system,
             scope_ids=ScopeIds(None, None, self.course.id, self.course.id)
