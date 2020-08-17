@@ -190,7 +190,7 @@ class LibraryToolsService(object):
             for lib in self.store.get_library_summaries()
         ]
 
-    def import_from_blockstore(self, dest_block, blockstore_block_id):
+    def import_from_blockstore(self, dest_block, blockstore_block_ids):
         """
         Imports a block from a blockstore-based learning context (usually a
         content library) into modulestore, as a new child of dest_block.
@@ -205,18 +205,31 @@ class LibraryToolsService(object):
         if self.user_id is None:
             raise ValueError("Cannot check user permissions - LibraryTools user_id is None")
 
+        if len(set(blockstore_block_ids)) != len(blockstore_block_ids):
+             # We don't support importing the exact same block twice because it would break the way we generate new IDs
+             # for each block and then overwrite existing copies of blocks when re-importing the same blocks.
+             raise ValueError("One or more library component IDs is a duplicate.")
+
         dest_course_key = dest_key.context_key
         user = User.objects.get(id=self.user_id)
         if not has_studio_write_access(user, dest_course_key):
             raise PermissionDenied()
 
         # Read the source block; this will also confirm that user has permission to read it.
-        orig_block = load_block(UsageKey.from_string(blockstore_block_id), user)
+        # (This could be slow and use lots of memory, except for the fact that LibrarySourcedBlock which calls this
+        # should be limiting the number of blocks to a reasonable limit. We load them all now instead of one at a
+        # time in order to raise any errors before we start actually copying blocks over.)
+        orig_blocks = [load_block(UsageKey.from_string(key), user) for key in blockstore_block_ids]
 
         with self.store.bulk_operations(dest_course_key):
-            new_block_id = self._import_block(orig_block, dest_key)
+            child_ids_updated = set()
+
+            for block in orig_blocks:
+                new_block_id = self._import_block(block, dest_key)
+                child_ids_updated.add(new_block_id)
+
             # Remove any existing children that are no longer used
-            for old_child_id in set(dest_block.children) - set([new_block_id]):
+            for old_child_id in set(dest_block.children) - child_ids_updated:
                 self.store.delete_item(old_child_id, self.user_id)
             # If this was called from a handler, it will save dest_block at the end, so we must update
             # dest_block.children to avoid it saving the old value of children and deleting the new ones.

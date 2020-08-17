@@ -3,11 +3,12 @@ window.LibrarySourceBlockAuthorView = function(runtime, element) {
     'use strict';
     var $element = $(element);
 
-    $element.on('click', '.save-btn', function(e) {
-        var url = $(e.target).data('submit-url');
+    $element.on('save', '#library-sourced-block-picker', function(e, params) {
+        var save_url = params.save_url;
+        var source_block_ids = params.source_block_ids;
         var data = {
             values: {
-                source_block_id: $element.find('input').val()
+                source_block_ids: source_block_ids
             },
             defaults: ['display_name']
         };
@@ -20,7 +21,7 @@ window.LibrarySourceBlockAuthorView = function(runtime, element) {
         });
         $.ajax({
             type: 'POST',
-            url: url,
+            url: save_url,
             data: JSON.stringify(data),
             global: false // Disable error handling that conflicts with studio's notify('save') and notify('cancel')
         }).done(function() {
