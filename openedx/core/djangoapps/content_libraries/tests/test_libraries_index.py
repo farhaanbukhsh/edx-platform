@@ -6,6 +6,7 @@ from django.conf import settings
 from django.core.management import call_command
 from django.test.utils import override_settings
 from mock import patch
+from search.search_engine_base import SearchEngine
 from opaque_keys.edx.locator import LibraryLocatorV2, LibraryUsageLocatorV2
 from search.search_engine_base import SearchEngine
 
@@ -33,6 +34,12 @@ class ContentLibraryIndexerTest(ContentLibrariesRestApiTest):
         """
         result1 = self._create_library(slug="test-lib-index-1", title="Title 1", description="Description")
         result2 = self._create_library(slug="test-lib-index-2", title="Title 2", description="Description")
+        LibraryLocatorV2.from_string(result1['id'])
+
+        result2 = self._create_library(slug="test-lib-index-2", title="Title 2", description="Description")
+        LibraryLocatorV2.from_string(result2['id'])
+
+        self.assertEqual(len(ContentLibraryIndexer.get_items()), 2)
 
         for result in [result1, result2]:
             library_key = LibraryLocatorV2.from_string(result['id'])
@@ -168,6 +175,7 @@ class ContentLibraryIndexerTest(ContentLibrariesRestApiTest):
         commit_library_and_verify(library_key)
 
         lib2 = self._create_library(slug="test-lib-update-block-2", title="Title 2", description="Description")
+        LibraryLocatorV2.from_string(lib2['id'])
         self._add_block_to_library(lib2["id"], "problem", "problem1")
         self._commit_library_changes(lib2["id"])
 

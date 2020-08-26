@@ -209,6 +209,7 @@ class ContentLibraryIndexer(SearchIndexerBase):
             "title": bundle_metadata.title,
             "description": bundle_metadata.description,
             "num_blocks": num_blocks,
+            "type": ref.type,
             "version": bundle_metadata.latest_version,
             "last_published": last_published_str,
             "has_unpublished_changes": has_unpublished_changes,
@@ -305,7 +306,7 @@ def index_block(sender, usage_key, **kwargs):  # pylint: disable=unused-argument
     if LibraryBlockIndexer.indexing_is_enabled():
         try:
             LibraryBlockIndexer.index_items([usage_key])
-        except ConnectionError as e:
+        except ElasticConnectionError as e:
             log.exception(e)
 
 
@@ -317,5 +318,5 @@ def remove_block_index(sender, usage_key, **kwargs):  # pylint: disable=unused-a
     if LibraryBlockIndexer.indexing_is_enabled():
         try:
             LibraryBlockIndexer.remove_items([usage_key])
-        except ConnectionError as e:
+        except ElasticConnectionError as e:
             log.exception(e)

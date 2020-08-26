@@ -47,6 +47,7 @@ from django.core.validators import validate_unicode_slug
 from django.db import IntegrityError
 from django.utils.translation import ugettext as _
 from elasticsearch.exceptions import ConnectionError as ElasticConnectionError
+from rest_framework.exceptions import ValidationError
 from lxml import etree
 from opaque_keys.edx.keys import LearningContextKey
 from opaque_keys.edx.locator import BundleDefinitionLocator, LibraryLocatorV2, LibraryUsageLocatorV2
@@ -56,7 +57,7 @@ from xblock.core import XBlock
 from xblock.exceptions import XBlockNotFoundError
 
 from openedx.core.djangoapps.content_libraries import permissions
-from openedx.core.djangoapps.content_libraries.constants import DRAFT_NAME
+from openedx.core.djangoapps.content_libraries.constants import DRAFT_NAME, COMPLEX
 from openedx.core.djangoapps.content_libraries.library_bundle import LibraryBundle
 from openedx.core.djangoapps.content_libraries.libraries_index import ContentLibraryIndexer, LibraryBlockIndexer
 from openedx.core.djangoapps.content_libraries.models import ContentLibrary, ContentLibraryPermission
@@ -127,6 +128,7 @@ class ContentLibraryMetadata:
     description = attr.ib("")
     num_blocks = attr.ib(0)
     version = attr.ib(0)
+    type = attr.ib(default=COMPLEX)
     last_published = attr.ib(default=None, type=datetime)
     has_unpublished_changes = attr.ib(False)
     # has_unpublished_deletes will be true when the draft version of the library's bundle
@@ -220,14 +222,16 @@ class AccessLevel:
     NO_ACCESS = None
 
 
-def get_libraries_for_user(user, org=None):
+def get_libraries_for_user(user, org=None, library_type=None):
     """
     Return content libraries that the user has permission to view.
     """
+    filter_kwargs = {}
     if org:
-        qs = ContentLibrary.objects.filter(org__short_name=org)
-    else:
-        qs = ContentLibrary.objects.all()
+        filter_kwargs['org__short_name'] = org
+    if library_type:
+        filter_kwargs['type'] = library_type
+    qs = ContentLibrary.objects.filter(**filter_kwargs)
     return permissions.perms[permissions.CAN_VIEW_THIS_CONTENT_LIBRARY].filter(user, qs)
 
 
@@ -287,6 +291,7 @@ def get_metadata_from_index(queryset, text_search=None):
             key=lib.library_key,
             bundle_uuid=metadata[i]['uuid'],
             title=metadata[i]['title'],
+            type=lib.type,
             description=metadata[i]['description'],
             version=metadata[i]['version'],
             allow_public_learning=queryset[i].allow_public_learning,
@@ -336,6 +341,7 @@ def get_library(library_key):
         key=library_key,
         bundle_uuid=ref.bundle_uuid,
         title=bundle_metadata.title,
+        type=ref.type,
         description=bundle_metadata.description,
         num_blocks=num_blocks,
         version=bundle_metadata.latest_version,
@@ -347,7 +353,9 @@ def get_library(library_key):
     )
 
 
-def create_library(collection_uuid, org, slug, title, description, allow_public_learning, allow_public_read):
+def create_library(
+    collection_uuid, library_type, org, slug, title, description, allow_public_learning, allow_public_read,
+):
     """
     Create a new content library.
 
@@ -380,6 +388,7 @@ def create_library(collection_uuid, org, slug, title, description, allow_public_
         ref = ContentLibrary.objects.create(
             org=org,
             slug=slug,
+            type=library_type,
             bundle_uuid=bundle.uuid,
             allow_public_learning=allow_public_learning,
             allow_public_read=allow_public_read,
@@ -392,6 +401,7 @@ def create_library(collection_uuid, org, slug, title, description, allow_public_
         key=ref.library_key,
         bundle_uuid=bundle.uuid,
         title=title,
+        type=library_type,
         description=description,
         num_blocks=0,
         version=0,
@@ -452,6 +462,7 @@ def update_library(
     description=None,
     allow_public_learning=None,
     allow_public_read=None,
+    library_type=None,
 ):
     """
     Update a library's title or description.
@@ -467,6 +478,16 @@ def update_library(
         changed = True
     if allow_public_read is not None:
         ref.allow_public_read = allow_public_read
+        changed = True
+    if library_type is not None:
+        if library_type != COMPLEX:
+            for block in get_library_blocks(library_key):
+                if block.usage_key.block_type != library_type:
+                    raise ValidationError(
+                        {'type': _('You can only set a library to that type if all existing blocks are of that type.')},
+                    )
+        ref.type = library_type
+
         changed = True
     if changed:
         ref.save()
@@ -528,7 +549,7 @@ def get_library_blocks(library_key, text_search=None):
                 for item in LibraryBlockIndexer.get_items(filter_terms=filter_terms, text_search=text_search)
                 if item is not None
             ]
-        except (ConnectionError) as e:
+        except ElasticConnectionError as e:
             log.exception(e)
 
     # If indexing is disabled, or connection to elastic failed
@@ -828,8 +849,7 @@ def delete_library_block_static_asset_file(usage_key, file_name):
 def get_allowed_block_types(library_key):  # pylint: disable=unused-argument
     """
     Get a list of XBlock types that can be added to the specified content
-    library. For now, the result is the same regardless of which library is
-    specified, but that may change in the future.
+    library.
     """
     # This import breaks in the LMS so keep it here. The LMS doesn't generally
     # use content libraries APIs directly but some tests may want to use them to
@@ -838,6 +858,10 @@ def get_allowed_block_types(library_key):  # pylint: disable=unused-argument
     # TODO: return support status and template options
     # See cms/djangoapps/contentstore/views/component.py
     block_types = sorted(name for name, class_ in XBlock.load_classes())
+    lib = get_library(library_key)
+    if lib.type != COMPLEX:
+        # Problem and Video libraries only permit XBlocks of the same name.
+        block_types = (name for name in block_types if name == lib.type)
     info = []
     for block_type in block_types:
         display_name = xblock_type_display_name(block_type, None)
