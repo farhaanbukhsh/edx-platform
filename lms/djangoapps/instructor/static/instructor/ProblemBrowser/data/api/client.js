@@ -25,9 +25,25 @@ const fetchTaskStatus = (endpoint, taskId) => fetch(
       credentials: 'same-origin',
       method: 'get',
       headers: HEADERS,
-    });
+    }
+  );
+
+const fetchDownloadsList = (endpoint, report_name) => {
+  const formData = new FormData();
+  formData.set('report_name', report_name);
+
+  return fetch(
+    endpoint, {
+      credentials: 'same-origin',
+      method: 'POST',
+      headers: HEADERS,
+      body: formData,
+    },
+  );
+}
 
 export {
     initiateProblemResponsesRequest,
     fetchTaskStatus,
+    fetchDownloadsList,
 };
