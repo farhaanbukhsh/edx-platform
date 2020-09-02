@@ -36,7 +36,7 @@
                     icon = 'edit';
                     break;
                 case 'Sequence':
-                    icon = 'tasks';
+                    icon = 'compass';
                     break;
                 default:
                     icon = 'book';
