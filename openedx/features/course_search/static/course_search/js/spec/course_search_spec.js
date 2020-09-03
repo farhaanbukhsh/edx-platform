@@ -254,7 +254,7 @@ define([
                 expect(this.item.$el).toContainElement('a[href="' + this.model.get('url') + '"]');
                 expect(this.item.$el.find('.result-type i')).toHaveClass('fa-' + this.item.unitIcon());
                 expect(this.item.$el.find('.result-excerpt')).toContainHtml(this.model.get('excerpt'));
-                expect(this.item.$el.find('.result-link')).toContainHtml('section ▸ subsection ▸ unit');
+                expect(this.item.$el.find('.result-link')).toContainHtml('section / subsection / unit');
             });
 
             it('rendersSequentialItem', function() {
@@ -263,7 +263,7 @@ define([
                 expect(this.seqItem.$el).toContainElement('a[href="' + this.seqModel.get('url') + '"]');
                 expect(this.seqItem.$el.find('.result-type i')).toHaveClass('fa-' + this.seqItem.unitIcon());
                 expect(this.seqItem.$el.find('.result-excerpt')).toBeEmpty();
-                expect(this.seqItem.$el.find('.result-link')).toContainHtml('section ▸ subsection');
+                expect(this.seqItem.$el.find('.result-link')).toContainHtml('section / subsection');
             });
 
             it('logsSearchItemViewEvent', function() {
