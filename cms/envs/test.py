@@ -246,7 +246,19 @@ VIDEO_CDN_URL = {
 FEATURES['ENABLE_COURSEWARE_INDEX'] = True
 FEATURES['ENABLE_LIBRARY_INDEX'] = True
 FEATURES['ENABLE_CONTENT_LIBRARY_INDEX'] = False
-SEARCH_ENGINE = "search.tests.mock_search_engine.MockSearchEngine"
+
+ENABLE_ELASTICSEARCH_FOR_TESTS = os.environ.get('EDXAPP_ENABLE_ELASTICSEARCH_FOR_TESTS', 'no').lower() in ('true', 'yes', '1')
+if ENABLE_ELASTICSEARCH_FOR_TESTS:
+    SEARCH_ENGINE = "search.elastic.ElasticSearchEngine"
+    ELASTIC_SEARCH_CONFIG = [
+        {
+            'use_ssl': os.environ.get('EDXAPP_ELASTICSEARCH_FOR_TESTS_USE_SSL', 'no').lower() in ('true', 'yes', '1'),
+            'host': os.environ.get('EDXAPP_ELASTICSEARCH_FOR_TESTS_HOST', 'localhost'),
+            'port': int(os.environ.get('EDXAPP_ELASTICSEARCH_FOR_TESTS_PORT', '9200'))
+        }
+    ]
+else:
+    SEARCH_ENGINE = "search.tests.mock_search_engine.MockSearchEngine"
 
 FEATURES['ENABLE_ENROLLMENT_TRACK_USER_PARTITION'] = True
 

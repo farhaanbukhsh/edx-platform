@@ -4,6 +4,7 @@ Tests for Blockstore-based Content Libraries
 """
 from contextlib import contextmanager
 from io import BytesIO
+from mock import patch
 from urllib.parse import urlencode
 import unittest
 
@@ -40,6 +41,18 @@ URL_BLOCK_METADATA_URL = '/api/xblock/v2/xblocks/{block_key}/'
 
 # Decorator for tests that require blockstore
 requires_blockstore = unittest.skipUnless(settings.RUN_BLOCKSTORE_TESTS, "Requires a running Blockstore server")
+
+
+def elasticsearch_test(func):
+    """
+    Decorator for tests which connect to elasticsearch when needed
+    """
+    if settings.SEARCH_ENGINE == "search.tests.mock_search_engine.MockSearchEngine":
+        return patch("openedx.core.djangoapps.content_libraries.libraries_index.ContentLibraryIndexer.SEARCH_KWARGS", new={})(func)
+    else:
+        return patch("openedx.core.djangoapps.content_libraries.libraries_index.ContentLibraryIndexer.SEARCH_KWARGS", new={
+            'refresh': 'wait_for'
+        })(func)
 
 
 @requires_blockstore
