@@ -399,7 +399,6 @@ define([
                 this.collection.set(searchResults);
                 this.collection.totalCount = 2;
                 this.resultsView.renderNext();
-                expect(this.resultsView.$el.find('.search-count')).toContainHtml('2');
                 expect(this.resultsView.$el.find('li').length).toEqual(2);
             }
 
