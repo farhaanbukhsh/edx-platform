@@ -412,6 +412,21 @@ def get_library_team(library_key):
     ]
 
 
+def get_library_user_permissions(library_key, user):
+    """
+    Fetch the specified user's access information.
+    """
+    ref = ContentLibrary.objects.get_by_key(library_key)
+    grant = ref.permission_grants.filter(user=user).first()
+    if grant is None:
+        return
+    return ContentLibraryPermissionEntry(
+        user=grant.user,
+        group=grant.group,
+        access_level=grant.access_level,
+    )
+
+
 def set_library_user_permissions(library_key, user, access_level):
     """
     Change the specified user's level of access to this library.
@@ -528,7 +543,7 @@ def get_library_blocks(library_key, text_search=None):
                 for item in LibraryBlockIndexer.get_items(filter_terms=filter_terms, text_search=text_search)
                 if item is not None
             ]
-        except (ConnectionError) as e:
+        except (ElasticConnectionError) as e:
             log.exception(e)
 
     # If indexing is disabled, or connection to elastic failed

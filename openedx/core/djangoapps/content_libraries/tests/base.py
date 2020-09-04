@@ -216,6 +216,16 @@ class ContentLibrariesRestApiTest(APITestCase):
         """ Get the list of users/groups authorized to use this library """
         return self._api('get', URL_LIB_TEAM.format(lib_key=lib_key), None, expect_response)
 
+    def _get_user_access_level(self, lib_key, user_id, expect_response=200):
+        """ Fetch a user's access level """
+        url = URL_LIB_TEAM_USER.format(lib_key=lib_key, user_id=user_id)
+        return self._api('get', url, None, expect_response)
+
+    def _add_user_by_email(self, lib_key, email, access_level, expect_response=200):
+        """ Add a user of a specified permission level by their email address. """
+        url = URL_LIB_TEAM.format(lib_key=lib_key)
+        return self._api('post', url, {"access_level": access_level, "email": email}, expect_response)
+
     def _set_user_access_level(self, lib_key, user_id, access_level, expect_response=200):
         """ Change the specified user's access level """
         url = URL_LIB_TEAM_USER.format(lib_key=lib_key, user_id=user_id)

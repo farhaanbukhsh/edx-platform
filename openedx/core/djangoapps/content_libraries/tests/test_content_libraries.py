@@ -355,6 +355,7 @@ class ContentLibrariesTest(ContentLibrariesRestApiTest):
         author_group_member = UserFactory.create(username="GroupMember", email="groupmember@example.com")
         author_group_member.groups.add(group)
         random_user = UserFactory.create(username="Random", email="random@example.com")
+        never_added = UserFactory.create(username="Never", email="never@example.com")
 
         # Library CRUD #########################################################
 
@@ -373,17 +374,20 @@ class ContentLibrariesTest(ContentLibrariesRestApiTest):
 
             # Add the other users to the content library:
             self._set_user_access_level(lib_id, author.pk, access_level="author")
-            self._set_user_access_level(lib_id, reader.pk, access_level="read")
+            # Add one of them via the email-based creation endpoint.
+            self._add_user_by_email(lib_id, reader.email, access_level="read")
             self._set_group_access_level(lib_id, group.name, access_level="author")
 
             team_response = self._get_library_team(lib_id)
             self.assertEqual(len(team_response), 4)
+            # We'll use this one later.
+            reader_grant = {"user_id": reader.pk, "group_name": None, "access_level": "read"}
             # The response should also always be sorted in a specific order (by username and group name):
             expected_response = [
                 {"user_id": None, "group_name": "group1", "access_level": "author"},
                 {"user_id": admin.pk, "group_name": None, "access_level": "admin"},
                 {"user_id": author.pk, "group_name": None, "access_level": "author"},
-                {"user_id": reader.pk, "group_name": None, "access_level": "read"},
+                reader_grant,
             ]
             for entry, expected in zip(team_response, expected_response):
                 self.assertDictContainsEntries(entry, expected)
@@ -392,6 +396,7 @@ class ContentLibrariesTest(ContentLibrariesRestApiTest):
         with self.as_user(random_user):
             self._get_library(lib_id, expect_response=403)
             self._get_library_team(lib_id, expect_response=403)
+            self._add_user_by_email(lib_id, never_added.email, access_level="read", expect_response=403)
 
         # But every authorized user can:
         for user in [admin, author, author_group_member]:
@@ -399,11 +404,15 @@ class ContentLibrariesTest(ContentLibrariesRestApiTest):
                 self._get_library(lib_id)
                 data = self._get_library_team(lib_id)
                 self.assertEqual(data, team_response)
+                data = self._get_user_access_level(lib_id, reader.pk)
+                self.assertEqual(data, {**reader_grant, 'username': 'Reader', 'email': 'reader@example.com'})
 
         # A user with only read permission can get data about the library but not the team:
         with self.as_user(reader):
             self._get_library(lib_id)
             self._get_library_team(lib_id, expect_response=403)
+            self._get_user_access_level(lib_id, author.pk, expect_response=403)
+            self._add_user_by_email(lib_id, never_added.email, access_level="read", expect_response=403)
 
         # Users without admin access cannot delete the library nor change its team:
         for user in [author, reader, author_group_member, random_user]:
@@ -412,6 +421,7 @@ class ContentLibrariesTest(ContentLibrariesRestApiTest):
                 self._set_user_access_level(lib_id, author.pk, access_level="admin", expect_response=403)
                 self._set_user_access_level(lib_id, admin.pk, access_level=None, expect_response=403)
                 self._set_user_access_level(lib_id, random_user.pk, access_level="read", expect_response=403)
+                self._add_user_by_email(lib_id, never_added.email, access_level="read", expect_response=403)
 
         # Users with author access (or higher) can edit the library's properties:
         with self.as_user(author):
