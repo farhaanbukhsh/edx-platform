@@ -229,10 +229,12 @@ class ContentLibrariesRestApiTest(APITestCase):
     def _set_user_access_level(self, lib_key, user_id, access_level, expect_response=200):
         """ Change the specified user's access level """
         url = URL_LIB_TEAM_USER.format(lib_key=lib_key, user_id=user_id)
-        if access_level is None:
-            return self._api('delete', url, None, expect_response)
-        else:
-            return self._api('put', url, {"access_level": access_level}, expect_response)
+        return self._api('put', url, {"access_level": access_level}, expect_response)
+
+    def _remove_user_access(self, lib_key, user_id, expect_response=200):
+        """ Should effectively be the same as the above with access_level=None, but using the delete HTTP verb. """
+        url = URL_LIB_TEAM_USER.format(lib_key=lib_key, user_id=user_id)
+        return self._api('delete', url, None, expect_response)
 
     def _set_group_access_level(self, lib_key, group_name, access_level, expect_response=200):
         """ Change the specified group's access level """

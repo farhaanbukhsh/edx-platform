@@ -434,6 +434,10 @@ def set_library_user_permissions(library_key, user, access_level):
     access_level should be one of the AccessLevel values defined above.
     """
     ref = ContentLibrary.objects.get_by_key(library_key)
+    current_grant = get_library_user_permissions(library_key, user)
+    if current_grant and current_grant.access_level == AccessLevel.ADMIN_LEVEL:
+        if not ref.permission_grants.filter(access_level=AccessLevel.ADMIN_LEVEL).exclude(user_id=user.id).exists():
+            raise ValueError(_('Cannot change or remove the access level for the only admin.'))
     if access_level is None:
         ref.permission_grants.filter(user=user).delete()
     else:

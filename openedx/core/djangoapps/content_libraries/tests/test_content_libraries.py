@@ -374,6 +374,9 @@ class ContentLibrariesTest(ContentLibrariesRestApiTest):
 
             # Add the other users to the content library:
             self._set_user_access_level(lib_id, author.pk, access_level="author")
+            # Delete it, add it again.
+            self._remove_user_access(lib_id, author.pk)
+            self._set_user_access_level(lib_id, author.pk, access_level="author")
             # Add one of them via the email-based creation endpoint.
             self._add_user_by_email(lib_id, reader.email, access_level="read")
             self._set_group_access_level(lib_id, group.name, access_level="author")
@@ -421,6 +424,7 @@ class ContentLibrariesTest(ContentLibrariesRestApiTest):
                 self._set_user_access_level(lib_id, author.pk, access_level="admin", expect_response=403)
                 self._set_user_access_level(lib_id, admin.pk, access_level=None, expect_response=403)
                 self._set_user_access_level(lib_id, random_user.pk, access_level="read", expect_response=403)
+                self._remove_user_access(lib_id, admin.pk, expect_response=403)
                 self._add_user_by_email(lib_id, never_added.email, access_level="read", expect_response=403)
 
         # Users with author access (or higher) can edit the library's properties:
@@ -489,6 +493,22 @@ class ContentLibrariesTest(ContentLibrariesRestApiTest):
             self._delete_library_block(block3_key)
             self._commit_library_changes(lib_id)
             self._revert_library_changes(lib_id)  # This is a no-op after the commit, but should still have 200 response
+
+    def test_no_lockout(self):
+        """
+        Test that administrators cannot be removed if they are the only administrator granted access.
+        """
+        admin = UserFactory.create(username="Admin", email="admin@example.com")
+        successor = UserFactory.create(username="Successor", email="successor@example.com")
+        with self.as_user(admin):
+            lib = self._create_library(slug="permtest", title="Permission Test Library", description="Testing")
+            # Fail to downgrade permissions.
+            self._remove_user_access(lib_key=lib['id'], user_id=admin.id, expect_response=400)
+            # Promote another user.
+            self._set_user_access_level(
+                lib_key=lib['id'], user_id=successor.id, access_level="admin",
+            )
+            self._remove_user_access(lib_key=lib['id'], user_id=admin.id)
 
     def test_library_blocks_with_links(self):
         """

@@ -18,7 +18,6 @@ from rest_framework.parsers import MultiPartParser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-
 from openedx.core.djangoapps.content_libraries import api, permissions
 from openedx.core.djangoapps.content_libraries.serializers import (
     ContentLibraryMetadataSerializer,
@@ -233,7 +232,10 @@ class LibraryTeamView(APIView):
                 {'email': [_('This user already has access to this library.')]},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        api.set_library_user_permissions(key, user, access_level=serializer.validated_data["access_level"])
+        try:
+            api.set_library_user_permissions(key, user, access_level=serializer.validated_data["access_level"])
+        except ValueError as err:
+            raise ValidationError(detail=str(err))
         grant = api.get_library_user_permissions(key, user)
         return Response(ContentLibraryPermissionSerializer(grant).data)
 
@@ -266,7 +268,10 @@ class LibraryTeamUserView(APIView):
         serializer = ContentLibraryPermissionLevelSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = get_object_or_404(User, pk=int(user_id))
-        api.set_library_user_permissions(key, user, access_level=serializer.validated_data["access_level"])
+        try:
+            api.set_library_user_permissions(key, user, access_level=serializer.validated_data["access_level"])
+        except ValueError as err:
+            raise ValidationError(detail=str(err))
         grant = api.get_library_user_permissions(key, user)
         return Response(ContentLibraryPermissionSerializer(grant).data)
 
@@ -292,7 +297,10 @@ class LibraryTeamUserView(APIView):
         key = LibraryLocatorV2.from_string(lib_key_str)
         api.require_permission_for_library_key(key, request.user, permissions.CAN_EDIT_THIS_CONTENT_LIBRARY_TEAM)
         user = get_object_or_404(User, pk=int(user_id))
-        api.set_library_user_permissions(key, user, access_level=None)
+        try:
+            api.set_library_user_permissions(key, user, access_level=None)
+        except ValueError as err:
+            raise ValidationError(detail=str(err))
         return Response({})
 
 
