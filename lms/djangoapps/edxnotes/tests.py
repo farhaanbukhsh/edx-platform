@@ -22,6 +22,7 @@ from django.urls import reverse
 from mock import MagicMock, patch
 from oauth2_provider.models import Application
 
+from lms.djangoapps.courseware.courses import get_course_about_section
 from lms.djangoapps.courseware.model_data import FieldDataCache
 from lms.djangoapps.courseware.module_render import get_module_for_descriptor
 from lms.djangoapps.courseware.tabs import get_course_tab_list
@@ -105,10 +106,18 @@ class EdxNotesDecoratorTest(ModuleStoreTestCase):
         ApplicationFactory(name="edx-notes")
         # Using old mongo because of locator comparison issues (see longer
         # note below in EdxNotesHelpersTest setUp.
-        self.course = CourseFactory(edxnotes=True, default_store=ModuleStoreEnum.Type.mongo)
+        # self.course = CourseFactory(edxnotes=True, default_store=ModuleStoreEnum.Type.mongo)
+        self.course = CourseFactory(edxnotes=True, default_store=ModuleStoreEnum.Type.mongo, emit_signals=True)
+        # from openedx.core.djangoapps.content.course_overviews.models import CourseOverview
+        # course_overview = CourseOverview.get_from_id(self.course.id)
+        # course_overview.effort = "06:00"
+        # course_overview.save()
+        # self.course.overview = "05:00"
         self.user = UserFactory()
         self.client.login(username=self.user.username, password=UserFactory._DEFAULT_PASSWORD)
         self.problem = TestProblem(self.course, self.user)
+        self.request = RequestFactory().request()
+        self.request.user = self.user
 
     @patch.dict("django.conf.settings.FEATURES", {'ENABLE_EDXNOTES': True})
     @patch("edxnotes.helpers.get_public_endpoint", autospec=True)
@@ -178,6 +187,15 @@ class EdxNotesDecoratorTest(ModuleStoreTestCase):
         """
         del self.problem.descriptor.runtime.modulestore
         self.assertEqual("original_get_html", self.problem.get_html())
+
+    @patch.dict("django.conf.settings.FEATURES", {'ENABLE_EDXNOTES': True})
+    def test_edxnotes_course_about_section(self):
+        """
+        Tests that get_html is not wrapped when on the AboutBlock.
+        """
+        course_section = get_course_about_section(self.request, self.course, "short_description")
+        print(course_section)
+        self.assertEqual("TODO", course_section)
 
     def test_edxnotes_harvard_notes_enabled(self):
         """

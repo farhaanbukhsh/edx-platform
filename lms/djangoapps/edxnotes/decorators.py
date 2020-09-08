@@ -21,6 +21,7 @@ def edxnotes(cls):
         """
         Returns raw html for the component.
         """
+        print('GET_HTML')
         # Import is placed here to avoid model import at project startup.
         from edxnotes.helpers import (
             generate_uid, get_edxnotes_id_token, get_public_endpoint, get_token_url, is_feature_enabled
