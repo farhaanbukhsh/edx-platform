@@ -480,6 +480,11 @@ FEATURES = {
     'ENABLE_ORA_USER_STATE_UPLOAD_DATA': False,
 }
 
+# Specifies extra XBlock fields that should available when requested via the Course Blocks API
+# Should be a list of tuples of (block_type, field_name), where block_type can also be "*" for all block types.
+# e.g. COURSE_BLOCKS_API_EXTRA_FIELDS = [  ('course', 'other_course_settings'), ("problem", "weight")  ]
+COURSE_BLOCKS_API_EXTRA_FIELDS = []
+
 # Settings for the course reviews tool template and identification key, set either to None to disable course reviews
 COURSE_REVIEWS_TOOL_PROVIDER_FRAGMENT_NAME = 'coursetalk-reviews-fragment.html'
 COURSE_REVIEWS_TOOL_PROVIDER_PLATFORM_KEY = 'edx'
@@ -878,21 +883,6 @@ USAGE_ID_PATTERN = r'(?P<usage_id>(?:i4x://?[^/]+/[^/]+/[^/]+/[^@]+(?:@[^/]+)?)|
 USERNAME_REGEX_PARTIAL = r'[\w .@_+-]+'
 USERNAME_PATTERN = r'(?P<username>{regex})'.format(regex=USERNAME_REGEX_PARTIAL)
 
-
-############################## HEARTBEAT ######################################
-
-# Checks run in normal mode by the heartbeat djangoapp
-HEARTBEAT_CHECKS = [
-    'openedx.core.djangoapps.heartbeat.default_checks.check_modulestore',
-    'openedx.core.djangoapps.heartbeat.default_checks.check_database',
-]
-
-# Other checks to run by default in "extended"/heavy mode
-HEARTBEAT_EXTENDED_CHECKS = (
-    'openedx.core.djangoapps.heartbeat.default_checks.check_celery',
-)
-
-HEARTBEAT_CELERY_TIMEOUT = 5
 
 ############################## EVENT TRACKING #################################
 LMS_SEGMENT_KEY = None
@@ -2164,6 +2154,7 @@ CELERY_QUEUES = [
 # let logging work as configured:
 CELERYD_HIJACK_ROOT_LOGGER = False
 
+
 CELERY_BROKER_VHOST = ''
 CELERY_BROKER_USE_SSL = False
 CELERY_EVENT_QUEUE_TTL = None
@@ -2172,6 +2163,22 @@ CELERY_BROKER_TRANSPORT = 'amqp'
 CELERY_BROKER_HOSTNAME = 'localhost'
 CELERY_BROKER_USER = 'celery'
 CELERY_BROKER_PASSWORD = 'celery'
+
+############################## HEARTBEAT ######################################
+
+# Checks run in normal mode by the heartbeat djangoapp
+HEARTBEAT_CHECKS = [
+    'openedx.core.djangoapps.heartbeat.default_checks.check_modulestore',
+    'openedx.core.djangoapps.heartbeat.default_checks.check_database',
+]
+
+# Other checks to run by default in "extended"/heavy mode
+HEARTBEAT_EXTENDED_CHECKS = (
+    'openedx.core.djangoapps.heartbeat.default_checks.check_celery',
+)
+
+HEARTBEAT_CELERY_TIMEOUT = 5
+CELERY_CHECK_ROUTING_KEY = HIGH_PRIORITY_QUEUE
 
 ################################ Block Structures ###################################
 
